@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import {
   Form,
@@ -12,10 +12,12 @@ import {
   Space,
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
 export default () => {
+  // 返回一个函数,这个函数中传递一个路径可以跳转到指定路径
+  var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
   let [searchParams, setSearchParams] = useSearchParams();
   var voteTypeStr;
@@ -56,28 +58,28 @@ export default () => {
     });
   };
   // 记录截至时间
-  const [deadLine, setDeadLine] = useState();
+  const [deadLine, setDeadLine] = useState("");
   // 表单提交
   const submitInfo = async (data: any) => {
     const voteInfo = {
-      ...data,
-      options,
+      voteId: 1,
+      userId: 1,
+      title: data.title,
+      desc: data.description,
       deadLine,
-      voteType: searchParams.get("type"),
+      options,
+      voteType: searchParams.get("type") === "single" ? 0 : 1,
     };
-    console.log(voteInfo);
-    axios
-      .post("http://127.0.0.1:4523/mock/1161313/vote", {
-        firstName: "Fred",
-        lastName: "Flintstone",
-      })
-      .then(function (response) {
-        console.log(response);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+    const res = await axios.post("http://localhost:5000/vote", voteInfo);
+    // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
+    const voteId = res.data.data._id;
+    const alertMessage = res.data.message;
+    navigate("/vote/" + voteId);
   };
+
+  useEffect(() => {
+    console.log(`这吊代码写的好累啊,不写了包夜吃鸡去`);
+  }, []);
   return (
     <>
       <NavBar onBack={() => console.log(`返回`)}>
@@ -148,8 +150,8 @@ export default () => {
               onClose={() => {
                 setVisible(false);
               }}
-              onConfirm={(date: Date) => {
-                setDeadLine(date);
+              onConfirm={(value: Date) => {
+                setDeadLine(`${value.toLocaleString()}`);
               }}
               precision="minute"
             >
@@ -160,13 +162,6 @@ export default () => {
         <Form.Item
           name="isAnonymous"
           label="匿名投票"
-          childElementPosition="right"
-        >
-          <Switch />
-        </Form.Item>
-        <Form.Item
-          name="restriction"
-          label="限制传播"
           childElementPosition="right"
         >
           <Switch />

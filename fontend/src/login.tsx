@@ -1,6 +1,19 @@
+/**
+ * 用户登录组件
+ */
+
 import { Button, Space, Avatar, Form, Input, NavBar } from "antd-mobile";
+import axios from "axios";
 
 export default () => {
+  const login = async (data: string) => {
+    const res = await axios.post(
+      "http://127.0.0.1:4523/mock/1161313/login",
+      data
+    );
+    console.log(res);
+  };
+
   return (
     <>
       <NavBar onBack={() => console.log(`返回`)}>用户登录</NavBar>
@@ -17,7 +30,7 @@ export default () => {
 
         <Form
           layout="horizontal"
-          onFinish={(data) => console.log(data)}
+          onFinish={(data) => login(data)}
           footer={
             <Button block type="submit" color="primary" size="large">
               登录

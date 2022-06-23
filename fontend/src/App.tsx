@@ -4,6 +4,7 @@ import Home from "./Home";
 // import SelectCreation from "../../vote-fontend/src/SelectCreation";
 import CreateVote from "./CreateVote";
 import Login from "./login";
+import VoteView from "./voteView";
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
           {/* <Route path="create" element={<SelectCreation />} /> */}
           <Route path="me" element={<h1>me</h1>} />
         </Route>
-        <Route path="/vote/:id" element={<div>vote/:id</div>} />
+        <Route path="/vote/:id" element={<VoteView />} />
         <Route path="create" element={<CreateVote />} />
         <Route path="login" element={<Login />} />
       </Routes>
