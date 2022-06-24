@@ -7,7 +7,6 @@ import User from "./../models/user.js";
  */
 const createUser = async (req, res) => {
   try {
-    console.log(req.body);
     const newUser = await User.create(req.body);
     console.log(newUser);
     res.status(200).json({
@@ -17,7 +16,7 @@ const createUser = async (req, res) => {
   } catch (err) {
     // 创建失败，捕获错误并返回错误信息到前台
     console.log(err);
-    res.status(400).json({
+    res.status(404).json({
       status: "failed",
       message: `创建用户失败`,
       err: err,

@@ -1,9 +1,8 @@
 import express from "express";
 const app = express();
 import bodyParser from "body-parser";
-import apiRouter from "./apiRoutes.js";
 import cors from "cors";
-
+import userRouter from "./routes/userRoutes.js";
 /**
  * 解决跨域问题
  */
@@ -28,5 +27,5 @@ app.use(bodyParser.json());
  * 所有的api路由处理
  */
 
-app.use(apiRouter);
+app.use("/users", userRouter);
 export default app;

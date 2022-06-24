@@ -68,3 +68,36 @@ app.use(
 );
 ```
 
+2. 用户鉴权和认证
+
+本次使用的方案较为现代和简单，`Json Web Tokens` `(JWT)` , jwt是一种无状态的解决方案，不需要在服务器上存储任何会话状态，对于构建 `restful` 风格的 api来说是一种很完美的方案， `restful api` 应该始终是无状态的。[jwt官网]([JSON Web Tokens - jwt.io](https://jwt.io/))
+
+**流程**
+
+前提： 客户端已经存储了用户之前注册的个人信息，
+
+![image-20220624174019813](http://i0.hdslb.com/bfs/album/8b0028478a306415322c7dd5d7a9b97eea97eee6.png)
+
+* 用户将用户名和密码和密码发送给后台
+* 如果验证通过有这个账号，创建一个唯一的 `JWT` 密钥
+* 服务端返回密钥给用户
+* 客户端使用 `cookie` 或者 `localstorage` 来存储 `JWT` 密钥
+* 用户浏览需要权限的内容时，自身携带 `JWT` 密钥来访问
+
+简单来说就是后台给用户发送一个护照来证明自己的访问权限 
+
+![image-20220624175133819](http://i0.hdslb.com/bfs/album/08f63b3700470bf120e339d7080817f56f3ac494.png)
+
+`JWT` 本质上来说就是一串字符串，由三部分组成： `HEADER` `PAYLOAD` `VERIFY SIGNATURE` 
+
+* 标头中包含着令牌的一些元数据，包括：加密算法，令牌类型
+* 载荷中包含着我们可以编码的数据，载荷中的数据越大最后的 `token` 就越大，这两部分都是可以公开的，不能存储任何敏感信息
+* 最终的签名使用 标头，载荷 和存储在服务器端的 secret 组成。
+
+ ![image-20220624180316640](http://i0.hdslb.com/bfs/album/ce7124a69170e8d7b28206df2d0183244dd6f456.png)
+
+用户携带的 `JWT` 发送给后台，后台根据他携带的 `header` 和 `payload` 加上自己本地存储的 `secret` 共同计算出一个本地测试签名，这个签名如果和 `JWT` 中用户自己计算出来的签名不同则说明 `header` 和 `payload` 被篡改了，则没有访问路径的权限。
+
+![image-20220624180620851](http://i0.hdslb.com/bfs/album/49cf1b190a49d491ad1e8f54406d2d9cec97582e.png)
+
+总结： **没有secret任何人都无法操作 JWT数据，因为无法获得有效的签名**

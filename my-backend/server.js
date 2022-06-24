@@ -4,10 +4,9 @@ import "dotenv/config";
 /**
  * 监听服务端口
  */
-function listen() {
-  console.log(`数据库成功连接`);
-  app.listen(process.env.PORT, () => {
-    console.log(`后台api服务运行在 http://localhost:${process.env.PORT}`);
+function listen(port) {
+  app.listen(port, () => {
+    console.log(`后台api服务运行在 http://localhost:${port}`);
   });
 }
 
@@ -15,14 +14,11 @@ function listen() {
  * 连接mongodb数据库
  */
 
-function connect() {
-  mongoose.connection
-    .on("err", console.log)
-    .on("disconnected", connect)
-    .on("open", listen);
-  return mongoose.connect(process.env.MONGO_URI);
+function connect(url) {
+  return mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => console.log(`数据库连接成功`));
 }
 
-connect();
-
-console.log(process.env.PORT);
+connect(process.env.MONGO_URI);
+listen(process.env.PORT);

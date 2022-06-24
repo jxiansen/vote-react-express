@@ -9,6 +9,7 @@ import {
   DatePicker,
   Switch,
   NavBar,
+  Toast,
   Space,
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
@@ -59,7 +60,11 @@ export default () => {
   };
   // 记录截至时间
   const [deadLine, setDeadLine] = useState("");
-  // 表单提交
+
+  /**
+   * 表单提交
+   */
+
   const submitInfo = async (data: any) => {
     const voteInfo = {
       voteId: 1,
@@ -72,9 +77,24 @@ export default () => {
     };
     const res = await axios.post("http://localhost:5000/vote", voteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
-    const voteId = res.data.data._id;
-    const alertMessage = res.data.message;
-    navigate("/vote/" + voteId);
+    const voteId = res.data.res._id;
+    console.log(res.data);
+    const { code, message } = res.data;
+    // 当提交后显示后台操作结果反馈
+    if (code === 1) {
+      Toast.show({
+        icon: "success",
+        content: message,
+      });
+      setTimeout(() => {
+        navigate("/vote/" + voteId);
+      }, 2000);
+    } else {
+      Toast.show({
+        icon: "fail",
+        content: message,
+      });
+    }
   };
 
   useEffect(() => {

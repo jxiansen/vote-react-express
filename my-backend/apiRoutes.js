@@ -1,16 +1,9 @@
 import { Router } from "express";
 const router = Router();
-import userController from "./controllers/userController.js";
-import VoteController from "./controllers/VoteController.js";
-
+import voteController from "./controllers/VoteController.js";
 router.get("/name", (req, res) => {
   res.send("hello");
 });
-
-/**
- * 用户注册
- */
-router.post("/register", userController.createUser);
 
 /**
  * 用户登录

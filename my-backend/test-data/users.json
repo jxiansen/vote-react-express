@@ -1,0 +1,22 @@
+[
+  {
+    "_id": {
+      "$oid": "62b551ad8b6d81479ebe1118"
+    },
+    "userId": 2,
+    "username": "jack",
+    "password": "234523",
+    "email": "asdgasdgasgd",
+    "avatar": "asdgasgd",
+    "createTime": {
+      "$date": {
+        "$numberLong": "1656050090689"
+      }
+    },
+    "updateTime": {
+      "$date": {
+        "$numberLong": "1656050090689"
+      }
+    }
+  }
+]

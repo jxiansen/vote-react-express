@@ -10,15 +10,15 @@ const createVote = async (req, res) => {
   try {
     const newVote = await Vote.create(req.body);
     res.status(200).json({
-      status: 1,
+      code: 1,
       message: `创建投票成功！🎉`,
-      data: newVote,
+      res: newVote,
     });
   } catch (err) {
     res.status(400).json({
-      status: -1,
+      code: 0,
       message: `创建投票失败`,
-      err: err,
+      err,
     });
   }
 };
