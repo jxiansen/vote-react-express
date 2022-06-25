@@ -1,7 +1,11 @@
 /**
  * 导入User模型
  */
-import User from "./../models/user.js";
+import User from "./../models/userModel.js";
+import path from "path";
+import fs from "fs";
+// import multer from "multer";
+// const upload = multer({ dest: "./../public/upload/" });
 /**
  * 创建用户信息
  */
@@ -124,6 +128,58 @@ const searchUser = async (req, res) => {
   }
 };
 
+/**
+ * 头像上传,上传成功后,修改文件名并返回文件存储路径
+ */
+const uploadAvatar = (req, res, next) => {
+  try {
+    // 原来的名字
+    const originalname = path.join(
+      process.cwd(),
+      req.file.destination,
+      req.file.originalname
+    );
+    // 存储后的名字
+    const name = path.join(process.cwd(), req.file.path);
+    fs.renameSync(name, originalname); // 重命名
+    res.json({
+      status: "scuscess",
+      message: `头像上传成功！🎉`,
+      data: `http://localhost:${process.env.PORT}/upload/${req.file.originalname}`, // 返回图片的服务器地址
+    });
+  } catch (err) {
+    res.json({
+      status: "faild",
+      message: `头像上传失败,${err}`,
+    });
+  }
+};
+
+// multer({ dest: "./public/upload/" }).single("file"),
+//   (req, res, next) => {
+//     try {
+//       // 原来的名字
+//       const originalname = path.join(
+//         process.cwd(),
+//         req.file.destination,
+//         req.file.originalname
+//       );
+//       // 存储后的名字
+//       const name = path.join(process.cwd(), req.file.path);
+//       fs.renameSync(name, originalname); // 重命名
+//       res.json({
+//         status: "scuscess",
+//         message: `头像上传成功！🎉`,
+//         data: `http://localhost:${process.env.PORT}/upload/${req.file.originalname}`, // 返回图片的服务器地址
+//       });
+//     } catch (err) {
+//       res.json({
+//         status: "faild",
+//         message: `头像上传失败,${err}`,
+//       });
+//     }
+//   };
+
 export default {
   searchUser,
   createUser,
@@ -132,4 +188,5 @@ export default {
   updateUser,
   deleteUser,
   searchUser,
+  uploadAvatar,
 };

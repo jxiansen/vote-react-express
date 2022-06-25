@@ -5,6 +5,7 @@ import Home from "./Home";
 import CreateVote from "./CreateVote";
 import Login from "./login";
 import VoteView from "./voteView";
+import Singup from "./singup";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/vote/:id" element={<VoteView />} />
         <Route path="create" element={<CreateVote />} />
         <Route path="login" element={<Login />} />
+        <Route path="signup" element={<Singup />} />
       </Routes>
     </div>
   );

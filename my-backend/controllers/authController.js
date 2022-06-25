@@ -1,8 +1,8 @@
-import User from "./../models/user.js";
+import User from "./../models/userModel.js";
 import jwt from "jsonwebtoken";
-
+import { promisify } from "util";
 /**
- * 生成一个本地token,并返回
+ * 根据传入的userId生成一个本地token
  */
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -69,7 +69,28 @@ const login = async (req, res, next) => {
   });
 };
 
+const authRouter = async (req, res, next) => {
+  // 1. 检查请求头中是否存在token,并获取到该值
+  let token;
+  if (
+    req.headers.Authorization &&
+    req.headers.Authorization.startsWith("jing")
+  ) {
+    token = req.headers.Authorization.split(" ")[1];
+  }
+  if (!token) {
+    return res.status(401).json({
+      message: `你还没有登录,请登录后再重新访问`,
+    });
+  }
+
+  // 2. 验证token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  console.log(decoded);
+};
+
 export default {
   signup,
   login,
+  authRouter,
 };

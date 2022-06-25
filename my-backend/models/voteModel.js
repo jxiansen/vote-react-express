@@ -2,18 +2,23 @@
  * 投票模型
  */
 import mongoose from "mongoose";
-
 /**
  * 投票模型约束
  */
 const VoteSchema = new mongoose.Schema(
   {
-    voteId: { type: Number },
-    userId: { type: Number },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     title: { type: String, trim: true },
     desc: { type: String, trim: true },
     deadLine: { type: String },
-    options: [String],
+    options: [
+      {
+        optionId: mongoose.Schema.Types.ObjectId,
+        content: { type: String },
+        createrId: mongoose.Schema.Types.ObjectId,
+        avator: { type: String },
+      },
+    ],
     voteType: {
       type: Number,
       enum: { values: [0, 1], message: "voteType is must be 0 or 1" },

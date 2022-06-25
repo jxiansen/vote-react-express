@@ -2,37 +2,42 @@
  * 投票内容详情页面
  */
 
-import { NavBar, List, Space, Card, Button, WaterMark } from "antd-mobile";
+import { NavBar, List, Space, Card, Button, Toast } from "antd-mobile";
 import { useParams } from "react-router-dom";
 import { CheckOutline } from "antd-mobile-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 export default () => {
-  // 获取当前voteId,根据voteId来查找相关信息
+  const [voteInfo, setVoteInfo] = useState<any>();
+  // 组件刚加载出来, 获取当前voteId,根据voteId来查找相关信息
+  // 获取voteId
   const { id } = useParams();
-  const data = {
-    title: "晚饭吃啥",
-    desc: "决策晚饭吃饭内容",
-    options: ["黄焖鸡", "水饺", "肯德基"],
-    deadLine: "2023-1-12",
-    voteType: "single",
-  };
-  console.log(id);
+  useEffect(() => {
+    axios.get("http://localhost:5000/vote/" + id).then((res) => {
+      setVoteInfo(res.data.data);
+    });
+  }, [id]);
 
   // 当前投票是否选中
   const [checkedIdx, setCheckedIdx] = useState(-1);
+
+  // 加载时候占位
+  if (!voteInfo) {
+    return <div> </div>;
+  }
   return (
     <>
       <NavBar>投票详情</NavBar>
       {/* <Space direction="vertical" block align="center"> */}
-      <Card>{<h2>{data.title}</h2>}</Card>
+      <Card>{<h2>{voteInfo.title}</h2>}</Card>
       <Card
       // bodyStyle={{ fontSize: "1rem" }}
       >
-        {data.desc}
-        {data.voteType === "single" ? "[单选]" : "[多选]"}
+        {voteInfo.desc}
+        {voteInfo.voteType === 0 ? "[单选]" : "[多选]"}
       </Card>
       <List>
-        {data.options.map((option, idx) => {
+        {voteInfo.options.map((option: string, idx: number) => {
           return (
             <List.Item
               key={idx}
@@ -48,7 +53,9 @@ export default () => {
           );
         })}
       </List>
-      <Card bodyStyle={{ color: "GrayText" }}>投票截至: {data.deadLine}</Card>
+      <Card bodyStyle={{ color: "GrayText" }}>
+        投票截至: {voteInfo.deadLine}
+      </Card>
       {/* </Space> */}
     </>
   );
