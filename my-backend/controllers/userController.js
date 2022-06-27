@@ -14,7 +14,7 @@ const createUser = async (req, res) => {
     const newUser = await User.create(req.body);
     console.log(newUser);
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: `创建用户成功！🎉`,
     });
   } catch (err) {
@@ -36,7 +36,7 @@ const getAllUsers = async (req, res) => {
     const allUsers = await User.find();
 
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: `查询所有用户成功！🎉`,
       data: allUsers,
     });
@@ -56,7 +56,7 @@ const getUserById = async (req, res) => {
     const data = await User.findById(req.params.id);
     // 这种写法是 User.findOne({ _id: req.params.id }) 的简写
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: `查询当前用户成功！🎉`,
       data: data,
     });
@@ -79,7 +79,7 @@ const updateUser = async (req, res) => {
     });
 
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: "用户信息修改成功！",
       data: user,
     });
@@ -98,7 +98,7 @@ const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id); // REST API中删除操作不返回信息到客户端
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: `删除用户成功！🎉`,
     });
   } catch (err) {
@@ -116,7 +116,7 @@ const searchUser = async (req, res) => {
   try {
     const data = await User.find(req.query);
     res.status(200).json({
-      status: "scuscess",
+      status: "success",
       message: `查询用户成功！🎉`,
       data,
     });
@@ -133,19 +133,20 @@ const searchUser = async (req, res) => {
  */
 const uploadAvatar = (req, res, next) => {
   try {
+    const fileType = req.file.originalname.split(".")[1];
     // 原来的名字
-    const originalname = path.join(
-      process.cwd(),
-      req.file.destination,
-      req.file.originalname
-    );
+    const oldName = path.join(process.cwd(), req.file.path);
     // 存储后的名字
-    const name = path.join(process.cwd(), req.file.path);
-    fs.renameSync(name, originalname); // 重命名
+    const newName = path.join(
+      process.cwd(),
+      req.file.path + "." + req.file.originalname.split(".")[1]
+    );
+    // 重命名
+    fs.renameSync(oldName, newName);
     res.json({
-      status: "scuscess",
+      status: "success",
       message: `头像上传成功！🎉`,
-      data: `http://localhost:${process.env.PORT}/upload/${req.file.originalname}`, // 返回图片的服务器地址
+      data: `http://localhost:${process.env.PORT}/upload/${req.file.filename}.${fileType}`, // 返回图片的服务器地址
     });
   } catch (err) {
     res.json({
@@ -155,30 +156,17 @@ const uploadAvatar = (req, res, next) => {
   }
 };
 
-// multer({ dest: "./public/upload/" }).single("file"),
-//   (req, res, next) => {
-//     try {
-//       // 原来的名字
-//       const originalname = path.join(
-//         process.cwd(),
-//         req.file.destination,
-//         req.file.originalname
-//       );
-//       // 存储后的名字
-//       const name = path.join(process.cwd(), req.file.path);
-//       fs.renameSync(name, originalname); // 重命名
-//       res.json({
-//         status: "scuscess",
-//         message: `头像上传成功！🎉`,
-//         data: `http://localhost:${process.env.PORT}/upload/${req.file.originalname}`, // 返回图片的服务器地址
-//       });
-//     } catch (err) {
-//       res.json({
-//         status: "faild",
-//         message: `头像上传失败,${err}`,
-//       });
-//     }
-//   };
+/**
+ * 根据用户的ID返回用户的头像地址
+ */
+const getAvatarById = async (id) => {
+  try {
+    const userData = await User.findById(id);
+    return userData.avatar;
+  } catch (err) {
+    console.log("获取用户头像失败" + err);
+  }
+};
 
 export default {
   searchUser,
@@ -189,4 +177,5 @@ export default {
   deleteUser,
   searchUser,
   uploadAvatar,
+  getAvatarById,
 };

@@ -18,7 +18,17 @@ export default () => {
     });
   }, [id]);
 
-  // 当前投票是否选中
+  /**
+   * 检查自己是否投过票
+   */
+  const isVoted = async (res: any) => {
+    const arr = res.options
+      .map((val: any) => val.supporterId)
+      .filter((i: any) => !!i);
+    return !!arr.length;
+  };
+
+  // 当前投票选中状态
   const [checkedIdx, setCheckedIdx] = useState(-1);
 
   // 加载时候占位
@@ -28,35 +38,39 @@ export default () => {
   return (
     <>
       <NavBar>投票详情</NavBar>
-      {/* <Space direction="vertical" block align="center"> */}
       <Card>{<h2>{voteInfo.title}</h2>}</Card>
-      <Card
-      // bodyStyle={{ fontSize: "1rem" }}
-      >
+      <Card>
         {voteInfo.desc}
-        {voteInfo.voteType === 0 ? "[单选]" : "[多选]"}
+        {voteInfo.voteType ? "[单选]" : "[多选]"}
       </Card>
       <List>
-        {voteInfo.options.map((option: string, idx: number) => {
-          return (
-            <List.Item
-              key={idx}
-              extra={"1票"}
-              arrow={false}
-              onClick={() => setCheckedIdx(idx)}
-            >
-              {option}
-              {checkedIdx === idx && (
-                <CheckOutline color="var(--adm-color-primary)" />
-              )}
-            </List.Item>
-          );
-        })}
+        {voteInfo.options.map((option: any, idx: number) => (
+          <List.Item
+            key={idx}
+            extra={option.count}
+            arrow={false}
+            onClick={() => setCheckedIdx(idx)}
+          >
+            {option.content}
+            {checkedIdx === idx && (
+              <CheckOutline color="var(--adm-color-primary)" />
+            )}
+          </List.Item>
+        ))}
       </List>
       <Card bodyStyle={{ color: "GrayText" }}>
         投票截至: {voteInfo.deadLine}
       </Card>
-      {/* </Space> */}
+
+      <Button
+        block
+        color="primary"
+        size="middle"
+        disabled
+        onClick={() => console.log(checkedIdx)}
+      >
+        投票
+      </Button>
     </>
   );
 };

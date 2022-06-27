@@ -2,14 +2,33 @@
  * 用户登录组件
  */
 
-import { Button, Space, Avatar, Form, Input, NavBar } from "antd-mobile";
+import { Button, Space, Avatar, Form, Input, NavBar, Toast } from "antd-mobile";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default () => {
+  const navigate = useNavigate();
+
+  /**
+   * 根据用户名和密码提交信息登录
+   * @param {string} 用户提交的信息
+   */
+
   const login = async (data: string) => {
     const res = await axios.post("http://localhost:5000/users/login", data);
     // 登录之后将token保存并跳转
     console.log(res.data);
+    // 提示操作结果
+    Toast.show({
+      icon: res.data.code ? "success" : "fail",
+      content: res.data.message,
+    });
+    if (res.data.code) {
+      // 登录成功跳转到用户界面
+      setInterval(() => {
+        navigate("/home/create");
+      }, 1500);
+    }
   };
 
   return (

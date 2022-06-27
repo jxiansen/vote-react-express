@@ -13,7 +13,7 @@ import {
   Space,
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
 export default () => {
@@ -21,6 +21,7 @@ export default () => {
   var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
   let [searchParams, setSearchParams] = useSearchParams();
+
   var voteTypeStr;
   if (searchParams.get("type") === "single") {
     voteTypeStr = "单选";
@@ -29,15 +30,12 @@ export default () => {
   } else {
     setSearchParams({ type: "single" });
   }
+
   // 设置默认事件选择器是否显示
   const [visible, setVisible] = useState(false);
   // 设置时间选择器defaultValue
   const now = new Date();
-  const onFinish = (values: any) => {
-    Dialog.alert({
-      content: <pre>{JSON.stringify(values, null, 2)}</pre>,
-    });
-  };
+
   // 选项数组
   const [options, updateOptions] = useImmer([""]);
   // 增加选项组
@@ -67,36 +65,32 @@ export default () => {
 
   const submitInfo = async (data: any) => {
     const voteInfo = {
-      userId: "62b5c41f86d4e6eb6e0925dd",
+      createrId: "62b5c41f86d4e6eb6e0925dd",
       title: data.title,
-      desc: data.description,
+      desc: data.desc,
       deadLine,
-      options,
-      voteType: searchParams.get("type") === "single" ? 0 : 1,
+      options: options.map((val) => ({
+        content: `${val}`,
+        count: 0,
+      })),
+      voteType: data.voteType,
     };
     const res = await axios.post("http://localhost:5000/vote", voteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
     const { voteId, message, code } = res.data;
+    console.log(voteId, message, code);
     // 当提交后显示后台操作结果反馈
-    if (code === 1) {
-      Toast.show({
-        icon: "success",
-        content: message,
-      });
+    Toast.show({
+      icon: code ? "success" : "fail",
+      content: message,
+    });
+    if (code) {
       setTimeout(() => {
         navigate("/vote/" + voteId);
       }, 2000);
-    } else {
-      Toast.show({
-        icon: "fail",
-        content: message,
-      });
     }
   };
 
-  useEffect(() => {
-    console.log(`这吊代码写的好累啊,不写了包夜吃鸡去`);
-  }, []);
   return (
     <>
       <NavBar onBack={() => console.log(`返回`)}>
@@ -117,7 +111,7 @@ export default () => {
         >
           <Input placeholder="投票标题" style={{ "--font-size": "30px" }} />
         </Form.Item>
-        <Form.Item name="description">
+        <Form.Item name="desc">
           <TextArea
             placeholder="补充描述(选填)"
             style={{ "--font-size": "22px" }}
@@ -153,7 +147,11 @@ export default () => {
             <span style={{ color: "blue" }}>添加选项</span>
           </Space>
         </Form.Item>
-        <Form.Item label="截至日期" childElementPosition="right">
+        <Form.Item
+          name="deadLine"
+          label="截至日期"
+          childElementPosition="right"
+        >
           <div
             onClick={() => {
               setVisible(true);
@@ -177,7 +175,7 @@ export default () => {
           </div>
         </Form.Item>
         <Form.Item
-          name="isAnonymous"
+          name="voteType"
           label="匿名投票"
           childElementPosition="right"
         >

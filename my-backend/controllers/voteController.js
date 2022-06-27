@@ -2,6 +2,8 @@
  * 导入投票模型
  */
 import Vote from "../models/voteModel.js";
+import UserController from "./userController.js";
+
 /**
  * 创建投票
  */
@@ -14,6 +16,7 @@ const createVote = async (req, res) => {
       voteId: newVote._id,
     });
   } catch (err) {
+    console.log(err);
     res.status(400).json({
       code: 0,
       message: `创建投票失败`,

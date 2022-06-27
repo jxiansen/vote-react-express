@@ -2,29 +2,28 @@
  * 投票模型
  */
 import mongoose from "mongoose";
+
 /**
  * 投票模型约束
  */
 const VoteSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    title: { type: String, trim: true },
-    desc: { type: String, trim: true },
-    deadLine: { type: String },
+    createrId: mongoose.ObjectId, // 投票创建者的id
+    title: { type: String, trim: true }, // 投票标题
+    desc: { type: String, trim: true }, // 投票描述
+    deadLine: { type: String }, // 投票截至日期
     options: [
+      // 所有投票选项
       {
-        optionId: mongoose.Schema.Types.ObjectId,
-        content: { type: String },
-        createrId: mongoose.Schema.Types.ObjectId,
-        avator: { type: String },
+        content: { type: String }, // 投票选项
+        count: { type: Number, default: 0 }, // 当前选项支持数
+        supporterId: mongoose.ObjectId, // 当前选项支持者的id
+        avatar: { type: String }, // 支持该选项的用户头像
       },
     ],
-    voteType: {
-      type: Number,
-      enum: { values: [0, 1], message: "voteType is must be 0 or 1" },
-    },
-    createdAt: { type: Date, default: Date.now },
-    updateAt: { type: Date, default: Date.now },
+    voteType: { type: Boolean }, // 如果是单选投票为 false,多选投票为 true
+    createdAt: { type: Date, default: Date.now }, // 创建时间
+    updateAt: { type: Date, default: Date.now }, // 更新时间
   },
   { versionKey: false }
 );

@@ -22,6 +22,7 @@ const signup = async (req, res, next) => {
     const token = generateToken(newUser._id);
 
     res.status(201).json({
+      code: 1,
       status: "success",
       token,
       data: {
@@ -30,6 +31,7 @@ const signup = async (req, res, next) => {
     });
   } catch (err) {
     res.status(404).json({
+      code: 0,
       status: "failed",
       message: "用户注册失败！",
       err: err,
@@ -45,6 +47,7 @@ const login = async (req, res, next) => {
   // 1. 检查请求中是否存在用户名和密码
   if (!username || !password) {
     return res.status(404).json({
+      code: 0,
       status: "failed",
       message: "请提供用户名或密码",
     });
@@ -55,6 +58,7 @@ const login = async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     // 检查数据库中的密码和用户输入的密码是否匹配
     return res.status(401).json({
+      code: 0,
       status: "failed",
       message: "登录失败,错误的用户名或密码！",
     });
@@ -63,6 +67,7 @@ const login = async (req, res, next) => {
   // 3. 如果用户名和密码都匹配成功,则发送token给客户端
   const token = generateToken(user._id);
   return res.status(200).json({
+    code: 1,
     status: "Success",
     message: "登录成功",
     token,
