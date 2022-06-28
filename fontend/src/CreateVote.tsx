@@ -4,7 +4,6 @@ import {
   Form,
   Input,
   Button,
-  Dialog,
   TextArea,
   DatePicker,
   Switch,
@@ -13,23 +12,26 @@ import {
   Space,
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
 export default () => {
+  const [voteTypeStr, updateVoteTypeStr] = useImmer("");
   // 返回一个函数,这个函数中传递一个路径可以跳转到指定路径
   var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
   let [searchParams, setSearchParams] = useSearchParams();
 
-  var voteTypeStr;
-  if (searchParams.get("type") === "single") {
-    voteTypeStr = "单选";
-  } else if (searchParams.get("type") === "multiple") {
-    voteTypeStr = "多选";
-  } else {
-    setSearchParams({ type: "single" });
-  }
+  useEffect(() => {
+    if (searchParams.get("type") === "single") {
+      updateVoteTypeStr("单选");
+    } else if (searchParams.get("type") === "multiple") {
+      updateVoteTypeStr("多选");
+    } else {
+      setSearchParams({ type: "single" });
+      updateVoteTypeStr("单选");
+    }
+  }, []);
 
   // 设置默认事件选择器是否显示
   const [visible, setVisible] = useState(false);
@@ -75,7 +77,7 @@ export default () => {
       })),
       voteType: data.voteType,
     };
-    const res = await axios.post("http://localhost:5000/vote", voteInfo);
+    const res = await axios.post("/vote", voteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
     const { voteId, message, code } = res.data;
     console.log(voteId, message, code);

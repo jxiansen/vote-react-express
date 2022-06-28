@@ -21,6 +21,7 @@ const VoteSchema = new mongoose.Schema(
         avatar: { type: String }, // 支持该选项的用户头像
       },
     ],
+    allCounter: { type: Number, default: 0 }, // 选项中所有投过票的人数
     voteType: { type: Boolean }, // 如果是单选投票为 false,多选投票为 true
     createdAt: { type: Date, default: Date.now }, // 创建时间
     updateAt: { type: Date, default: Date.now }, // 更新时间

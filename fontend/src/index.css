@@ -30,7 +30,8 @@
 }
 
 .bottom {
-  border: 1px dashed;
+  padding-top: 5px;
+  background-color: white;
 }
 
 .footer {

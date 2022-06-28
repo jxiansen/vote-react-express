@@ -9,8 +9,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 export default () => {
   const [voteInfo, setVoteInfo] = useState<any>();
-  // 组件刚加载出来, 获取当前voteId,根据voteId来查找相关信息
-  // 获取voteId
+  // 组件刚加载出来, 获取当前voteId, 根据voteId来查找相关信息;
+  // 获取voteId;
   const { id } = useParams();
   useEffect(() => {
     axios.get("http://localhost:5000/vote/" + id).then((res) => {

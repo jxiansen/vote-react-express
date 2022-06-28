@@ -7,8 +7,13 @@ router
   .route("/")
   .get(voteController.getAllVote)
   .post(voteController.createVote);
+
 router.route("/test").get(authController.authRouter);
+
 // 根据投票id获取投票内容详情
-router.route("/:id").get(voteController.getVote);
+router
+  .route("/:id")
+  .get(voteController.getVote)
+  .delete(voteController.deleteVoteById);
 
 export default router;

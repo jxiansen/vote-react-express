@@ -13,9 +13,10 @@ import {
   Toast,
 } from "antd-mobile";
 import { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
-import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+axios.defaults.baseURL = "http://localhost:5000"; // 配置axios请求的地址
 
 export default () => {
   const navigate = useNavigate();
@@ -40,10 +41,7 @@ export default () => {
     // 转换成formdata数据上传后端
     formdata.append("avatar", file, file.name);
     // 上传后端接口
-    const res = await axios.post(
-      "http://localhost:5000/users/avatar",
-      formdata
-    );
+    const res = await axios.post("/users/avatar", formdata);
     // 保存头像url
     setAvatar(res.data.data);
     const uploadRes = res.data.message;
@@ -65,10 +63,7 @@ export default () => {
       ...data,
       avatar,
     };
-    const respose = await axios.post(
-      "http://localhost:5000/users/signup",
-      signupInfo
-    );
+    const respose = await axios.post("/users/signup", signupInfo);
     // 提示操作结果
     Toast.show({
       icon: respose.data.status === "success" ? "success" : "fail",

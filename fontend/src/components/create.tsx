@@ -1,12 +1,11 @@
 // @ts-nocheck
-import React, { FC } from "react";
 import { NavBar, Button, Toast } from "antd-mobile";
 import { FileOutline, UnorderedListOutline } from "antd-mobile-icons";
 import "./../index.css";
 import { useNavigate } from "react-router-dom";
 
 export default () => {
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
   return (
     <div className="box">
@@ -17,7 +16,7 @@ export default () => {
           color="primary"
           size="large"
           onClick={() => {
-            Navigate("/create?type=single");
+            navigate("/createvote?type=single");
           }}
         >
           单选投票
@@ -29,7 +28,7 @@ export default () => {
           color="primary"
           size="large"
           onClick={() => {
-            Navigate("/create?type=multiple");
+            navigate("/createvote?type=multiple");
           }}
         >
           多选投票

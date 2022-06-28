@@ -1,6 +1,30 @@
 import User from "./../models/userModel.js";
 import jwt from "jsonwebtoken";
 import { promisify } from "util";
+
+/**
+ * 创建并生成一个token
+ */
+const createSendToken = (id, statusCode, res) => {
+  const token = generateToken(id);
+
+  res.cookie("jwt", token, {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    secure: true, // 只允许在https上使用
+    httpOnly: true,
+  });
+
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
+
 /**
  * 根据传入的userId生成一个本地token
  */
@@ -71,6 +95,7 @@ const login = async (req, res, next) => {
     status: "Success",
     message: "登录成功",
     token,
+    userId: user._id,
   });
 };
 

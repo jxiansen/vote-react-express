@@ -2,8 +2,7 @@
  * 导入投票模型
  */
 import Vote from "../models/voteModel.js";
-import UserController from "./userController.js";
-
+import _ from "lodash";
 /**
  * 创建投票
  */
@@ -29,22 +28,25 @@ const createVote = async (req, res) => {
  * 获取当前用户创建的所有投票
  */
 const getAllVote = async (req, res) => {
-  console.log(req.body);
-  // const { userId } = req.body;
-  // try {
-  //   Vote.findOne({
-  //     userId,
-  //   });
-  //   res.status(200).json({
-  //     message: `获取用户所有投票成功`,
-  //   });
-  // } catch (err) {
-  //   res.status(400).json({
-  //     code: 0,
-  //     message: `获取用户所有投票失败`,
-  //     err,
-  //   });
-  // }
+  try {
+    const allVote = await Vote.find({
+      createrId: req.query.userId,
+    });
+    const responseData = allVote.map((i) =>
+      _.pick(i, ["_id", "title", "allCounter"])
+    );
+    res.status(200).json({
+      code: 1,
+      message: `获取用户投票列表成功`,
+      data: responseData,
+    });
+  } catch (err) {
+    res.status(400).json({
+      code: 0,
+      message: `获取用户投票列表失败`,
+      err,
+    });
+  }
 };
 
 /**
@@ -69,8 +71,28 @@ const getVote = async (req, res) => {
   }
 };
 
+/**
+ * 根据voteId删除投票数记录
+ */
+const deleteVoteById = async (req, res) => {
+  try {
+    await Vote.findByIdAndDelete(req.params.id);
+    res.status(200).json({
+      code: 1,
+      message: "删除当前投票成功",
+    });
+  } catch (err) {
+    res.status(404).json({
+      code: 0,
+      message: "删除当前投票失败",
+      err,
+    });
+  }
+};
+
 export default {
   createVote,
   getAllVote,
   getVote,
+  deleteVoteById,
 };
