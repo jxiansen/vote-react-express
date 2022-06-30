@@ -17,8 +17,7 @@ const VoteSchema = new mongoose.Schema(
       {
         content: { type: String }, // 投票选项
         count: { type: Number, default: 0 }, // 当前选项支持数
-        supporterId: mongoose.ObjectId, // 当前选项支持者的id
-        avatar: { type: String }, // 支持该选项的用户头像
+        supporterId: [mongoose.ObjectId], // 当前选项支持者的id
       },
     ],
     allCounter: { type: Number, default: 0 }, // 选项中所有投过票的人数

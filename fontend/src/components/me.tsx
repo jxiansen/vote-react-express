@@ -4,13 +4,15 @@ import {
   FileOutline,
   SendOutline,
   DeleteOutline,
+  MinusOutline,
+  AddOutline,
 } from "antd-mobile-icons";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImmer } from "use-immer";
-import store from "./../store";
 
+import store from "./../store";
 import "./../index.css";
 
 export default () => {
@@ -29,7 +31,6 @@ export default () => {
       })
       .then((res) => {
         const list = res.data.data;
-        console.log(list);
         updateDataList((dataList) => {
           // @ts-ignore
           dataList.push(...list);
@@ -47,17 +48,21 @@ export default () => {
       icon: result.data.code ? "success" : "fail",
       content: result.data.message,
     });
+    document.location.reload();
   };
 
   /**
    * 处理tabbar组件的切换行为
    */
-  const handleChange = (key: String) => {
+  const handleChange = (key: String, idx: number) => {
+    const voteId = dataList[curEditIdx]["_id"];
     if (key === "/edit") {
-      navigate("/create");
+      navigate(`/createvote/${voteId}`);
     }
     if (key === "/view") {
-      console.log("查看按钮");
+      // 跳转到查看界面
+      navigate(`/vote/${voteId}`, { replace: true });
+      // 传递第二个参数对象, {replace: true} 不然跳转会在当前路径上拼接,而不是替代
     }
     if (key === "/share") {
       console.log("分享按钮");
@@ -68,57 +73,65 @@ export default () => {
     }
   };
 
-  /**
-   * Tabbar组件
-   */
-  const TabBars = () => {
-    const tabs = [
-      {
-        key: "/edit",
-        title: "编辑",
-        icon: <EditSOutline />,
-      },
-      {
-        key: "/view",
-        title: "查看",
-        icon: <FileOutline />,
-      },
-      {
-        key: "/share",
-        title: "分享",
-        icon: <SendOutline />,
-      },
-      {
-        key: "/delete",
-        title: "删除",
-        icon: <DeleteOutline />,
-      },
-    ];
-    return (
-      <TabBar defaultActiveKey={"/view"} onChange={(key) => handleChange(key)}>
-        {tabs.map((item) => (
-          <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
-        ))}
-      </TabBar>
-    );
-  };
-
   return (
     <div className="box">
-      <NavBar className="nav">我的投票</NavBar>
+      <NavBar className="nav" backArrow={false}>
+        我的投票
+      </NavBar>
       <Collapse accordion>
-        {dataList.map((val, idx) => {
+        {dataList.map((val: any, idx) => {
           return (
             <Collapse.Panel
               key={`${idx}`}
               title={`${val.title}`}
               onClick={() => updateCurEditIdx(idx)}
+              arrow={(active) =>
+                active ? <MinusOutline /> : <span>{`${val.allCounter}`}</span>
+              }
             >
-              <TabBars />
+              <TabBars handleChange={handleChange} />
             </Collapse.Panel>
           );
         })}
       </Collapse>
     </div>
+  );
+};
+
+/**
+ * Tabbar组件
+ */
+const TabBars = (props: any) => {
+  const tabs = [
+    {
+      key: "/edit",
+      title: "编辑",
+      icon: <EditSOutline />,
+    },
+    {
+      key: "/view",
+      title: "查看",
+      icon: <FileOutline />,
+    },
+    {
+      key: "/share",
+      title: "分享",
+      icon: <SendOutline />,
+    },
+    {
+      key: "/delete",
+      title: "删除",
+      icon: <DeleteOutline />,
+    },
+  ];
+  return (
+    <TabBar
+      defaultActiveKey={"/view"}
+      onChange={(key) => props.handleChange(key)}
+    >
+      {tabs.map((item) => (
+        <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
+      ))}
+    </TabBar>
   );
 };

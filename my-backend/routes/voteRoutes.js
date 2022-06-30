@@ -14,6 +14,7 @@ router.route("/test").get(authController.authRouter);
 router
   .route("/:id")
   .get(voteController.getVote)
+  .post(voteController.processVote)
   .delete(voteController.deleteVoteById);
 
 export default router;

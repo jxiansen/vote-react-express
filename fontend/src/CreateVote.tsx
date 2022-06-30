@@ -12,17 +12,44 @@ import {
   Space,
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import store from "./store";
 
 export default () => {
+  const { curLoginUser } = store;
+  // 存储投票信息
+  const [voteInfo, setVoteInfo] = useImmer({
+    createrId: curLoginUser,
+    title: "",
+    desc: "",
+    deadLine: "",
+    options: [],
+    voteType: false,
+  });
   const [voteTypeStr, updateVoteTypeStr] = useImmer("");
   // 返回一个函数,这个函数中传递一个路径可以跳转到指定路径
   var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
   let [searchParams, setSearchParams] = useSearchParams();
+  // 获取投票参数
+  const { id } = useParams();
 
   useEffect(() => {
+    // 如果是进入投票编辑界面
+    if (id) {
+      axios
+        .get(`vote/${id}`)
+        .then((res) => res.data.data)
+        .then((data) => {
+          data.options = data.options.map(
+            (obj: { content: any }) => obj.content
+          );
+          setVoteInfo(data);
+        });
+      return;
+    }
+    // 设定默认为 single 单选投票
     if (searchParams.get("type") === "single") {
       updateVoteTypeStr("单选");
     } else if (searchParams.get("type") === "multiple") {
@@ -38,49 +65,18 @@ export default () => {
   // 设置时间选择器defaultValue
   const now = new Date();
 
-  // 选项数组
-  const [options, updateOptions] = useImmer([""]);
-  // 增加选项组
-  const addOptions = () => {
-    updateOptions((options) => {
-      options.push(""); // options是草稿,直接对其操作
-    });
-  };
-  // 移除选项组
-  const removeOption = (idx: number) => {
-    updateOptions((options) => {
-      options.splice(idx, 1);
-    });
-  };
-  // 处理options输入操作
-  const editOptions = (e: string, idx: number) => {
-    updateOptions((options) => {
-      options[idx] = e;
-    });
-  };
-  // 记录截至时间
-  const [deadLine, setDeadLine] = useState("");
-
   /**
    * 表单提交
    */
 
-  const submitInfo = async (data: any) => {
-    const voteInfo = {
-      createrId: "62b5c41f86d4e6eb6e0925dd",
-      title: data.title,
-      desc: data.desc,
-      deadLine,
-      options: options.map((val) => ({
-        content: `${val}`,
-        count: 0,
-      })),
-      voteType: data.voteType,
-    };
-    const res = await axios.post("/vote", voteInfo);
+  const submitInfo = async () => {
+    const cloneVoteInfo = deepClone(voteInfo);
+    cloneVoteInfo.options = cloneVoteInfo.options.map((item: any) => ({
+      content: item,
+    }));
+    const res = await axios.post("/vote", cloneVoteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
     const { voteId, message, code } = res.data;
-    console.log(voteId, message, code);
     // 当提交后显示后台操作结果反馈
     Toast.show({
       icon: code ? "success" : "fail",
@@ -93,36 +89,72 @@ export default () => {
     }
   };
 
+  // 增加选项组
+  const addOptions = () => {
+    setVoteInfo((draft: any) => {
+      draft.options.push("");
+    });
+  };
+  // 移除选项组
+  const removeOption = (idx: number) => {
+    setVoteInfo((draft) => {
+      draft.options.splice(idx, 1);
+    });
+  };
+  // 处理options输入操作
+  const editOptions = (val: string, idx: number) => {
+    setVoteInfo((draft: any) => {
+      draft.options[idx] = val;
+    });
+  };
+
   return (
     <>
-      <NavBar onBack={() => console.log(`返回`)}>
+      <NavBar
+        onBack={() => {
+          navigate("/home/me");
+        }}
+      >
         创建{`${voteTypeStr}`}投票
       </NavBar>
+
       <Form
         layout="horizontal"
-        onFinish={(data) => submitInfo(data)}
+        onFinish={submitInfo}
         footer={
           <Button block type="submit" color="primary" size="large">
             提交
           </Button>
         }
       >
-        <Form.Item
-          name="title"
-          rules={[{ required: true, message: "标题不能为空" }]}
-        >
-          <Input placeholder="投票标题" style={{ "--font-size": "30px" }} />
+        <Form.Item rules={[{ required: true, message: "标题不能为空" }]}>
+          <Input
+            placeholder="投票标题"
+            style={{ "--font-size": "30px" }}
+            value={voteInfo.title}
+            onChange={(val) => {
+              setVoteInfo((draft) => {
+                draft.title = val;
+              });
+            }}
+          />
         </Form.Item>
-        <Form.Item name="desc">
+        <Form.Item>
           <TextArea
             placeholder="补充描述(选填)"
             style={{ "--font-size": "22px" }}
             maxLength={50}
+            value={voteInfo.desc}
             rows={2}
             showCount
+            onChange={(val) => {
+              setVoteInfo((draft) => {
+                draft.desc = val;
+              });
+            }}
           />
         </Form.Item>
-        {options.map((option, idx) => {
+        {voteInfo.options.map((option, idx) => {
           return (
             <Form.Item key={idx}>
               <Space align={"center"}>
@@ -149,11 +181,7 @@ export default () => {
             <span style={{ color: "blue" }}>添加选项</span>
           </Space>
         </Form.Item>
-        <Form.Item
-          name="deadLine"
-          label="截至日期"
-          childElementPosition="right"
-        >
+        <Form.Item label="截至日期" childElementPosition="right">
           <div
             onClick={() => {
               setVisible(true);
@@ -168,7 +196,9 @@ export default () => {
                 setVisible(false);
               }}
               onConfirm={(value: Date) => {
-                setDeadLine(`${value.toLocaleString()}`);
+                setVoteInfo((draft) => {
+                  draft.deadLine = `${value.toLocaleString()}`;
+                });
               }}
               precision="minute"
             >
@@ -176,14 +206,36 @@ export default () => {
             </DatePicker>
           </div>
         </Form.Item>
-        <Form.Item
-          name="voteType"
-          label="匿名投票"
-          childElementPosition="right"
-        >
-          <Switch />
+        <Form.Item label="匿名投票" childElementPosition="right">
+          <Switch
+            checked={voteInfo.voteType}
+            onChange={(val) => {
+              setVoteInfo((draft) => {
+                draft.voteType = val;
+              });
+            }}
+          />
         </Form.Item>
       </Form>
     </>
   );
+};
+
+/**
+ * 深拷贝函数
+ */
+
+const deepClone = (obj: any) => {
+  if (obj === null) return null;
+  let clone = Object.assign({}, obj);
+  Object.keys(clone).forEach(
+    (key) =>
+      (clone[key] =
+        typeof obj[key] === "object" ? deepClone(obj[key]) : obj[key])
+  );
+  if (Array.isArray(obj)) {
+    clone.length = obj.length;
+    return Array.from(clone);
+  }
+  return clone;
 };

@@ -9,7 +9,9 @@ export default () => {
 
   return (
     <div className="box">
-      <NavBar className="nav">创建投票</NavBar>
+      <NavBar className="nav" backArrow={false}>
+        创建投票
+      </NavBar>
       <div className="card">
         <FileOutline className="icon" />
         <Button
@@ -34,6 +36,7 @@ export default () => {
           多选投票
         </Button>
       </div>
+      <span className="textCenter">🐱‍👤山寨云提供计算服务</span>
     </div>
   );
 };

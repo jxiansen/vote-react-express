@@ -60,3 +60,8 @@
   margin: 10px;
   border-radius: 10px;
 }
+
+.textCenter {
+  text-align: center;
+  color: rgba(128, 128, 128, 0.4);
+}

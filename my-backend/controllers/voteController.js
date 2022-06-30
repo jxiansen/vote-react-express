@@ -57,10 +57,18 @@ const getVote = async (req, res) => {
   try {
     const _id = req.params.id;
     const data = await Vote.findById({ _id });
+    const responseData = _.pick(data, [
+      "title",
+      "desc",
+      "deadLine",
+      "voteType",
+      "options",
+    ]);
+    console.log(responseData);
     res.status(200).json({
       code: 1,
       message: "获取投票信息成功！",
-      data,
+      data: responseData,
     });
   } catch (err) {
     res.status(404).json({
@@ -90,9 +98,35 @@ const deleteVoteById = async (req, res) => {
   }
 };
 
+/**
+ * 根据用户传入的索引和投票id来更新投票的计数
+ */
+const processVote = async (req, res) => {
+  try {
+    const { id } = req.params; // 获取投票参数
+    const { checkedIdx, curLoginUser } = req.body;
+    console.log(req.body);
+    const copy = await Vote.findById(id);
+    copy.options[checkedIdx].count++;
+    copy.options[checkedIdx].supporterId.push(curLoginUser);
+    const responseData = await Vote.findByIdAndUpdate(id, copy, { new: true });
+    res.status(200).json({
+      code: 1,
+      message: "投票成功",
+    });
+  } catch (err) {
+    res.status(404).json({
+      code: 0,
+      message: "投票失败",
+      err,
+    });
+  }
+};
+
 export default {
   createVote,
   getAllVote,
   getVote,
   deleteVoteById,
+  processVote,
 };

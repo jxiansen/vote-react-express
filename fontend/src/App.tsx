@@ -16,6 +16,7 @@ function App() {
         <Route path="me" element={<Me />} />
       </Route>
       <Route path="createvote" element={<CreateVote />} />
+      <Route path="createvote/:id" element={<CreateVote />} />
       <Route path="vote/:id" element={<VoteView />} />
       <Route path="login" element={<Login />} />
       <Route path="signup" element={<Singup />} />

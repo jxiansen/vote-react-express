@@ -17,7 +17,6 @@ export default () => {
 
   const login = async (data: string) => {
     const res = await axios.post("/users/login", data);
-    console.log(res);
     // 登录之后将token保存并跳转
     store.curLoginUser = res.data.userId;
 

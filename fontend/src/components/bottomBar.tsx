@@ -1,33 +1,34 @@
+/**
+ * 布局页面的bootomBar组件
+ */
+
 import { TabBar } from "antd-mobile";
 import { UserOutline, AppOutline } from "antd-mobile-icons";
-import { Link, useNavigate } from "react-router-dom";
-
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useImmer } from "use-immer";
 import "./../index.css";
 
 export default () => {
+  const [activeKey, setActiveKey] = useImmer("/home/me");
   const navigate = useNavigate();
-  const tabs = [
-    {
-      key: "/home/new",
-      title: "新建",
-      icon: <AppOutline />,
-    },
-    {
-      key: "/home/me",
-      title: "我的",
-      icon: <UserOutline />,
-    },
-  ];
-
-  const handleChange = (key: any) => {
-    navigate(key);
-  };
+  const location = useLocation();
+  useEffect(() => {
+    const key = location.pathname.split("/").pop();
+    if (key === "me") setActiveKey("/home/me");
+    if (key === "new") setActiveKey("/home/new");
+  }, []);
 
   return (
-    <TabBar className="bottom" onChange={(key) => handleChange(key)}>
-      {tabs.map((item) => (
-        <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
-      ))}
+    <TabBar
+      className="bottom"
+      defaultActiveKey={activeKey}
+      onChange={(key) => {
+        navigate(key);
+      }}
+    >
+      <TabBar.Item key={"/home/new"} icon={<AppOutline />} title={"新建"} />
+      <TabBar.Item key={"/home/me"} icon={<UserOutline />} title={"我的"} />
     </TabBar>
   );
 };
