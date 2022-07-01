@@ -5,32 +5,30 @@ import {
   SendOutline,
   DeleteOutline,
   MinusOutline,
-  AddOutline,
 } from "antd-mobile-icons";
-import axios from "axios";
-import { useEffect, useRef } from "react";
+import { axiosInstance, store } from "./../config";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImmer } from "use-immer";
-
-import store from "./../store";
 import "./../index.css";
 
 export default () => {
-  // const { curLoginUser } = store;
   const [dataList, updateDataList] = useImmer([]);
   const [curEditIdx, updateCurEditIdx] = useImmer(-1);
   let navigate = useNavigate();
-  const curLoginUser = "62b5c41f86d4e6eb6e0925dd";
   // 组件最初加载时查看当前用户所创建的所有投票
   useEffect(() => {
-    axios
+    const { curLoginUser, token } = JSON.parse(localStorage.UserInfo);
+    axiosInstance
       .get("/vote", {
         params: {
           userId: curLoginUser,
         },
       })
       .then((res) => {
+        console.log(res);
         const list = res.data.data;
+        // console.log(list);
         updateDataList((dataList) => {
           // @ts-ignore
           dataList.push(...list);
@@ -42,7 +40,7 @@ export default () => {
    * 根据voteId来删除对应的投票信息
    */
   const deleteVote = async (voteId: String) => {
-    const result = await axios.delete(`vote/${voteId}`);
+    const result = await axiosInstance.delete(`vote/${voteId}`);
     updateDataList((dataList) => dataList.splice(curEditIdx, -1));
     Toast.show({
       icon: result.data.code ? "success" : "fail",

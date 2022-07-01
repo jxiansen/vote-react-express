@@ -3,39 +3,60 @@
  */
 
 import { Button, Space, Avatar, Form, Input, NavBar, Toast } from "antd-mobile";
-import axios from "axios";
+import { axiosInstance } from "./config";
 import { useNavigate } from "react-router-dom";
-import store from "./store";
+import { store } from "./config";
 
 export default () => {
   const navigate = useNavigate();
 
   /**
    * 根据用户名和密码提交信息登录
-   * @param {string} 用户提交的信息
    */
 
-  const login = async (data: string) => {
-    const res = await axios.post("/users/login", data);
-    // 登录之后将token保存并跳转
-    store.curLoginUser = res.data.userId;
-
-    // 提示操作结果
-    Toast.show({
-      icon: res.data.code ? "success" : "fail",
-      content: res.data.message,
-    });
-    if (res.data.code) {
-      // 登录成功跳转到用户界面
-      setInterval(() => {
-        navigate("/home/new");
-      }, 1500);
-    }
+  const login = (data: any) => {
+    axiosInstance
+      .post("/users/login", data)
+      .then((resp) => resp.data)
+      .then((data) => {
+        const { code, message, token, userId } = data;
+        if (code) {
+          localStorage.UserInfo = JSON.stringify({
+            curLoginUser: userId,
+            token: token,
+          });
+          // 提示操作结果
+          Toast.show({
+            icon: "success",
+            content: message,
+          });
+          setInterval(() => {
+            navigate("/home/me");
+          }, 1500);
+        } else {
+          Toast.show({
+            icon: "fail",
+            content: message,
+          });
+        }
+      })
+      .catch((err) => {
+        Toast.show({
+          icon: "fail",
+          content: "登录失败",
+        });
+      });
   };
 
   return (
     <>
-      <NavBar onBack={() => console.log(`返回`)}>用户登录</NavBar>
+      <NavBar
+        onBack={() => {
+          navigate("/signup");
+        }}
+      >
+        用户登录
+      </NavBar>
       <Space
         block
         direction="vertical"

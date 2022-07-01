@@ -6,6 +6,7 @@ import VoteView from "./voteView";
 import Singup from "./singup";
 import Create from "./components/create";
 import Me from "./components/me";
+import NoMatch from "./noMatch";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Route path="vote/:id" element={<VoteView />} />
       <Route path="login" element={<Login />} />
       <Route path="signup" element={<Singup />} />
+      <Route path="*" element={<NoMatch />} />
     </Routes>
   );
 }

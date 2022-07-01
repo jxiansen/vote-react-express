@@ -13,11 +13,11 @@ import {
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import axios from "axios";
-import store from "./store";
+import { axiosInstance } from "./config";
 
 export default () => {
-  const { curLoginUser } = store;
+  const { curLoginUser } = JSON.parse(localStorage.UserInfo);
+
   // 存储投票信息
   const [voteInfo, setVoteInfo] = useImmer({
     createrId: curLoginUser,
@@ -38,7 +38,7 @@ export default () => {
   useEffect(() => {
     // 如果是进入投票编辑界面
     if (id) {
-      axios
+      axiosInstance
         .get(`vote/${id}`)
         .then((res) => res.data.data)
         .then((data) => {
@@ -74,7 +74,7 @@ export default () => {
     cloneVoteInfo.options = cloneVoteInfo.options.map((item: any) => ({
       content: item,
     }));
-    const res = await axios.post("/vote", cloneVoteInfo);
+    const res = await axiosInstance.post("/vote", cloneVoteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
     const { voteId, message, code } = res.data;
     // 当提交后显示后台操作结果反馈
