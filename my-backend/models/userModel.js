@@ -14,8 +14,6 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true, select: false },
     email: { type: String, validate: [validator.isEmail, "邮箱不合法"] },
     avatar: { type: String },
-    createTime: { type: Date, default: Date.now() },
-    updateTime: { type: Date, default: Date.now() },
   },
   { versionKey: false }
 );

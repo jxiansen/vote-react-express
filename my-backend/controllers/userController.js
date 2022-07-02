@@ -12,14 +12,12 @@ import fs from "fs";
 const createUser = async (req, res) => {
   try {
     const newUser = await User.create(req.body);
-    console.log(newUser);
     res.status(200).json({
       status: "success",
       message: `创建用户成功！🎉`,
     });
   } catch (err) {
     // 创建失败，捕获错误并返回错误信息到前台
-    console.log(err);
     res.status(404).json({
       status: "failed",
       message: `创建用户失败`,
@@ -146,7 +144,7 @@ const uploadAvatar = (req, res, next) => {
     res.json({
       status: "success",
       message: `头像上传成功！🎉`,
-      data: `http://localhost:${process.env.PORT}/upload/${req.file.filename}.${fileType}`, // 返回图片的服务器地址
+      data: `http://${process.env.HOST}:${process.env.PORT}/upload/${req.file.filename}.${fileType}`, // 返回图片的服务器地址
     });
   } catch (err) {
     res.json({

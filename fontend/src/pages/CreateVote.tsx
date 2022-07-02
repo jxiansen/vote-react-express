@@ -13,7 +13,7 @@ import {
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { axiosInstance } from "./config";
+import { axiosInstance } from "../config";
 
 export default () => {
   const { curLoginUser } = JSON.parse(localStorage.UserInfo);
@@ -27,7 +27,7 @@ export default () => {
     options: [],
     voteType: false,
   });
-  const [voteTypeStr, updateVoteTypeStr] = useImmer("");
+  const [navbarStr, updateNavbarStr] = useImmer("");
   // 返回一个函数,这个函数中传递一个路径可以跳转到指定路径
   var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
@@ -36,11 +36,12 @@ export default () => {
   const { id } = useParams();
 
   useEffect(() => {
+    setNavBar();
     // 如果是进入投票编辑界面
     if (id) {
       axiosInstance
         .get(`vote/${id}`)
-        .then((res) => res.data.data)
+        .then((res) => res.data)
         .then((data) => {
           data.options = data.options.map(
             (obj: { content: any }) => obj.content
@@ -49,16 +50,22 @@ export default () => {
         });
       return;
     }
-    // 设定默认为 single 单选投票
-    if (searchParams.get("type") === "single") {
-      updateVoteTypeStr("单选");
-    } else if (searchParams.get("type") === "multiple") {
-      updateVoteTypeStr("多选");
-    } else {
-      setSearchParams({ type: "single" });
-      updateVoteTypeStr("单选");
-    }
   }, []);
+
+  /**
+   * 根据路location的不同设置不同的navbar
+   */
+  const setNavBar = () => {
+    if (id) {
+      updateNavbarStr("修改投票信息");
+    }
+    if (searchParams.get("type") === "single") {
+      updateNavbarStr("创建单选投票");
+    }
+    if (searchParams.get("type") === "multiple") {
+      updateNavbarStr("创建多选投票");
+    }
+  };
 
   // 设置默认事件选择器是否显示
   const [visible, setVisible] = useState(false);
@@ -76,7 +83,8 @@ export default () => {
     }));
     const res = await axiosInstance.post("/vote", cloneVoteInfo);
     // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
-    const { voteId, message, code } = res.data;
+    // @ts-ignore
+    const { voteId, message, code } = res;
     // 当提交后显示后台操作结果反馈
     Toast.show({
       icon: code ? "success" : "fail",
@@ -84,7 +92,28 @@ export default () => {
     });
     if (code) {
       setTimeout(() => {
-        navigate("/vote/" + voteId);
+        navigate(`/vote/${voteId}`);
+      }, 2000);
+    }
+  };
+
+  /**
+   * 更新投票信息
+   */
+
+  const updateVoteInfo = async () => {
+    const res = await axiosInstance.put(`/vote/${id}`, voteInfo);
+    Toast.show({
+      // @ts-ignore
+      icon: res.code ? "success" : "fail",
+      // @ts-ignore
+      content: res.message,
+      // @ts-ignore
+    });
+    // @ts-ignore
+    if (res.code) {
+      setTimeout(() => {
+        navigate(`/vote/${id}`);
       }, 2000);
     }
   };
@@ -115,15 +144,15 @@ export default () => {
           navigate("/home/me");
         }}
       >
-        创建{`${voteTypeStr}`}投票
+        {navbarStr}
       </NavBar>
 
       <Form
         layout="horizontal"
-        onFinish={submitInfo}
+        onFinish={() => (id ? updateVoteInfo() : submitInfo())}
         footer={
           <Button block type="submit" color="primary" size="large">
-            提交
+            完成
           </Button>
         }
       >

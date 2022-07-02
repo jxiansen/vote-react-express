@@ -4,25 +4,16 @@
 
 import { TabBar } from "antd-mobile";
 import { UserOutline, AppOutline } from "antd-mobile-icons";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useImmer } from "use-immer";
+import { useNavigate } from "react-router-dom";
 import "./../index.css";
 
 export default () => {
-  const [activeKey, setActiveKey] = useImmer("/home/me");
   const navigate = useNavigate();
-  const location = useLocation();
-  useEffect(() => {
-    const key = location.pathname.split("/").pop();
-    if (key === "me") setActiveKey("/home/me");
-    if (key === "new") setActiveKey("/home/new");
-  }, []);
 
   return (
     <TabBar
       className="bottom"
-      defaultActiveKey={activeKey}
+      activeKey={location.pathname}
       onChange={(key) => {
         navigate(key);
       }}

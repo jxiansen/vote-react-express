@@ -6,7 +6,7 @@ import {
   DeleteOutline,
   MinusOutline,
 } from "antd-mobile-icons";
-import { axiosInstance, store } from "./../config";
+import { axiosInstance } from "../config";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImmer } from "use-immer";
@@ -18,22 +18,32 @@ export default () => {
   let navigate = useNavigate();
   // 组件最初加载时查看当前用户所创建的所有投票
   useEffect(() => {
-    const { curLoginUser, token } = JSON.parse(localStorage.UserInfo);
-    axiosInstance
-      .get("/vote", {
-        params: {
-          userId: curLoginUser,
-        },
-      })
-      .then((res) => {
-        console.log(res);
-        const list = res.data.data;
-        // console.log(list);
-        updateDataList((dataList) => {
-          // @ts-ignore
-          dataList.push(...list);
-        });
+    // 先查看本地是否有用户信息,没有跳转到登录界面
+    if (!localStorage.UserInfo) {
+      Toast.show({
+        icon: "fail",
+        content: "你还没没有登录(⊙o⊙),请先登录。。。",
       });
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    }
+    if (localStorage.UserInfo) {
+      let { curLoginUser } = JSON.parse(localStorage.UserInfo);
+
+      axiosInstance
+        .get("/vote", {
+          params: {
+            userId: curLoginUser,
+          },
+        })
+        .then((res) => {
+          updateDataList((draft) => {
+            // @ts-ignore
+            draft.push(...res.data);
+          });
+        });
+    }
   }, []);
 
   /**
@@ -41,12 +51,18 @@ export default () => {
    */
   const deleteVote = async (voteId: String) => {
     const result = await axiosInstance.delete(`vote/${voteId}`);
-    updateDataList((dataList) => dataList.splice(curEditIdx, -1));
+
+    // 删除操作反馈信息
     Toast.show({
-      icon: result.data.code ? "success" : "fail",
-      content: result.data.message,
+      // @ts-ignore
+      icon: result.code ? "success" : "fail",
+      // @ts-ignore
+      content: result.message,
     });
-    document.location.reload();
+    updateDataList((draft) => {
+      draft.splice(curEditIdx, 1);
+    });
+    // document.location.reload();
   };
 
   /**

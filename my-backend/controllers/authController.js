@@ -29,7 +29,8 @@ const createSendToken = (id, statusCode, res) => {
  * 根据传入的userId生成一个本地token
  */
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  // 将用户的存储在mongodb中的_id存储在payload中,传入 payload,secret,和过期时间来创建令牌
+  return jwt.sign({ userId: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
@@ -40,21 +41,18 @@ const generateToken = (id) => {
 
 const signup = async (req, res, next) => {
   try {
-    console.log(req.body);
     const newUser = await User.create(req.body);
-    // 将用户的存储在mongodb中的_id存储在payload中,传入 payload,secret,和过期时间来创建令牌
-    const token = generateToken(newUser._id);
-
+    // 201状态码,成功请求并创建了新的资源
     res.status(201).json({
       code: 1,
       status: "success",
-      token,
+      message: "用户注册成功",
       data: {
         user: newUser,
       },
     });
   } catch (err) {
-    res.status(404).json({
+    res.status(403).json({
       code: 0,
       status: "failed",
       message: "用户注册失败！",
@@ -99,28 +97,59 @@ const login = async (req, res, next) => {
   });
 };
 
-const authRouter = async (req, res, next) => {
-  // 1. 检查请求头中是否存在token,并获取到该值
-  let token;
-  if (
-    req.headers.Authorization &&
-    req.headers.Authorization.startsWith("jing")
-  ) {
-    token = req.headers.Authorization.split(" ")[1];
-  }
-  if (!token) {
-    return res.status(401).json({
-      message: `你还没有登录,请登录后再重新访问`,
+/**
+ * 对关键路由进行用户验证保护
+ */
+
+const protect = async (req, res, next) => {
+  try {
+    // 1. 检查请求头中是否存在token,并获取到该值
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("jing")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (!token) {
+      return res.status(401).json({
+        message: `你还没有登录,请登录后再重新访问`,
+      });
+    }
+    // 2. 验证token的正确性,判断令牌过期了没？还是被人篡改了？
+    // 这个verify验证函数是异步的,为了使用await用一层promisefy来包裹来返回一个promise
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    // 3. 检查用户是否依然存在
+    const freshUser = await User.findById(decoded.userId);
+    if (!freshUser) {
+      return res.status(401).json({
+        code: 0,
+        message: `用户令牌正确，但账户已经被删除了`,
+      });
+    }
+  } catch (err) {
+    if (err.name === "JsonWebTokenError") {
+      return res.status(404).json({
+        code: 0,
+        message: "jwt令牌错误,认证失败",
+      });
+    }
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        code: 0,
+        message: "你的jwt令牌已经过期,请重新登录",
+      });
+    }
+    return res.status(400).json({
+      code: 0,
+      message: "验证错误",
     });
   }
-
-  // 2. 验证token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  console.log(decoded);
+  next();
 };
 
 export default {
   signup,
   login,
-  authRouter,
+  protect,
 };

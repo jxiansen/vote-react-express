@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import BottomBar from "./components/bottomBar";
-import "./index.css";
+import BottomBar from "./bottomBar";
+import "./../index.css";
 
 export default () => {
   return (

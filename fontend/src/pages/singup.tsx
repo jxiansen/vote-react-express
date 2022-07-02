@@ -15,8 +15,7 @@ import {
 import { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "./config";
-
+import { axiosInstance } from "./../config";
 
 export default () => {
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ export default () => {
     // 上传后端接口
     const res = await axiosInstance.post("/users/avatar", formdata);
     // 保存头像url
-    setAvatar(res.data.data);
+    setAvatar(res.data);
     const uploadRes = res.data.message;
     // 提示操作结果
     Toast.show({
@@ -66,7 +65,8 @@ export default () => {
     const respose = await axiosInstance.post("/users/signup", signupInfo);
     // 提示操作结果
     Toast.show({
-      icon: respose.data.status === "success" ? "success" : "fail",
+      // @ts-ignore
+      icon: respose.code ? "success" : "fail",
       content: `用户注册成功`,
     });
     // 注册成功跳转到登录界面

@@ -3,13 +3,12 @@
  */
 
 import { Button, Space, Avatar, Form, Input, NavBar, Toast } from "antd-mobile";
-import { axiosInstance } from "./config";
+import { axiosInstance } from "../config";
 import { useNavigate } from "react-router-dom";
-import { store } from "./config";
+import "./../index.css";
 
 export default () => {
   const navigate = useNavigate();
-
   /**
    * 根据用户名和密码提交信息登录
    */
@@ -17,8 +16,8 @@ export default () => {
   const login = (data: any) => {
     axiosInstance
       .post("/users/login", data)
-      .then((resp) => resp.data)
       .then((data) => {
+        // @ts-ignore
         const { code, message, token, userId } = data;
         if (code) {
           localStorage.UserInfo = JSON.stringify({
@@ -93,6 +92,14 @@ export default () => {
           </Form.Item>
         </Form>
       </Space>
+      <p
+        className="textCenter"
+        onClick={() => {
+          navigate("/signup");
+        }}
+      >
+        尚未注册？点我
+      </p>
     </>
   );
 };

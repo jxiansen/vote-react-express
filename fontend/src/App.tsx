@@ -1,14 +1,17 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./layout";
-import CreateVote from "./CreateVote";
-import Login from "./login";
-import VoteView from "./voteView";
-import Singup from "./singup";
-import Create from "./components/create";
-import Me from "./components/me";
-import NoMatch from "./noMatch";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import Layout from "./pages/layout";
+import CreateVote from "./pages/CreateVote";
+import Login from "./pages/login";
+import VoteView from "./pages/voteView";
+import Singup from "./pages/singup";
+import Create from "./pages/create";
+import Me from "./pages/me";
+import NoMatch from "./pages/noMatch";
 
 function App() {
+  const navigate = useNavigate();
+  // @ts-ignore
+  window.navigate = navigate;
   return (
     <Routes>
       <Route path="/" element={<Navigate replace to="/home/new" />} />
