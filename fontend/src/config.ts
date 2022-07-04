@@ -1,6 +1,8 @@
 // @ts-nocheck
 import axios from "axios";
+import { useState } from "react";
 import resso from "resso";
+import { Toast } from "antd-mobile";
 
 export const axiosInstance = axios.create({
   // 后端服务地址
@@ -21,13 +23,10 @@ axiosInstance.interceptors.request.use(
     ) {
       return config;
     }
-    // 判断本地是否存储有用户信息,不存在则跳转到登录界面
-    if (!localStorage.UserInfo) {
-      window.navigate("/login");
-    }
     // 如果本地存储了token就给请求头添加token
-    const { token } = JSON.parse(localStorage.UserInfo);
-    config.headers.Authorization = `jing ${token}`;
+    if (localStorage.token) {
+      config.headers.Authorization = `jing ${localStorage.token}`;
+    }
     return config;
   },
   (err) => {
@@ -53,3 +52,56 @@ axiosInstance.interceptors.response.use(
  * resso本地状态管理
  */
 export const store = resso({ curLoginUser: "", token: "" });
+
+/**
+ * 如果本地没有用户数据就跳转重定向
+ */
+
+export const Redirect = () => {
+  if (!localStorage.token) {
+    Toast.show({
+      icon: "fail",
+      content: "你还没没有登录(⊙o⊙),请先登录。。。",
+      afterClose: () => {
+        navigate("/login");
+      },
+    });
+  }
+};
+
+// 定义axios响应对象接口
+export interface RespData {
+  code: number;
+  message: string;
+  data?: object;
+  err?: object;
+}
+
+// 自定义复制粘贴板hook
+
+type CopiedValue = string | null;
+type CopyFn = (text: string) => Promise<boolean>; // Return success
+
+export function useCopyToClipboard(): [CopiedValue, CopyFn] {
+  const [copiedText, setCopiedText] = useState<CopiedValue>(null);
+
+  const copy: CopyFn = async (text) => {
+    if (!navigator?.clipboard) {
+      console.warn("Clipboard not supported");
+      return false;
+    }
+
+    // Try to save to clipboard then save it in the state if worked
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText(text);
+      return true;
+    } catch (error) {
+      console.warn("Copy failed", error);
+      setCopiedText(null);
+      return false;
+    }
+  };
+
+  return [copiedText, copy];
+}

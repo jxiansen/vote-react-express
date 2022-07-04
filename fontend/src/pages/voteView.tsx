@@ -2,16 +2,27 @@
  * 投票内容详情页面
  */
 
-import { NavBar, List, Card, Button, Toast, Avatar, Space } from "antd-mobile";
+import {
+  NavBar,
+  List,
+  Card,
+  Button,
+  Toast,
+  Avatar,
+  Space,
+  ProgressCircle,
+} from "antd-mobile";
 import { useParams, useNavigate } from "react-router-dom";
 import { CheckOutline } from "antd-mobile-icons";
 import { useState, useEffect, useRef } from "react";
-import { axiosInstance } from "../config";
+import { axiosInstance, Redirect } from "../config";
 import { useImmer } from "use-immer";
 
 export default () => {
   const navigate = useNavigate();
-  const { curLoginUser } = JSON.parse(localStorage.UserInfo);
+  // 先查看本地是否有用户信息,没有跳转到登录界面,重定向以后本地就可以读取到用户信息
+  Redirect();
+  const curLoginUser = localStorage.curLoginUser;
   const [voteInfo, setVoteInfo] = useImmer({
     title: "",
     desc: "",
@@ -108,8 +119,8 @@ export default () => {
       });
       return;
     }
-    const { curLoginUser } = JSON.parse(localStorage.UserInfo);
-    // 发送提交信息到后台
+    Redirect();
+    const curLoginUser = localStorage.curLoginUser;
     const res = await axiosInstance.post(`vote/${id}`, {
       checkedIdx,
       curLoginUser,
@@ -127,10 +138,13 @@ export default () => {
   };
 
   /**
-   * 小数转百分数
+   * 小数转百分数,传入分子和分母
    */
-  const toPercent = (point: number) => {
-    return `${(point * 100).toFixed(2)}%`;
+  const toPercent = (point: number, numerator: number): number => {
+    if (numerator === 0) {
+      return 0;
+    }
+    return Math.floor((point / numerator) * 100);
   };
 
   return (
@@ -147,16 +161,18 @@ export default () => {
           <List.Item
             key={idx}
             extra={
-              <p>
-                {option.count}票 &nbsp;&nbsp;&nbsp;
+              <Space align="center">
+                <span>{option.count}票 &nbsp;&nbsp;&nbsp;</span>
                 <span>
-                  {toPercent(
-                    voteInfo.allCounter === 0
-                      ? 0
-                      : option.count / voteInfo.allCounter
-                  )}
+                  <ProgressCircle
+                    style={{ "--size": "35px", fontSize: "12px" }}
+                    percent={toPercent(option.count, voteInfo.allCounter)}
+                  >
+                    {toPercent(option.count, voteInfo.allCounter).toString() +
+                      "%"}
+                  </ProgressCircle>
                 </span>
-              </p>
+              </Space>
             }
             arrow={false}
             onClick={() => {

@@ -5,7 +5,6 @@
 import {
   Button,
   Space,
-  Avatar,
   Form,
   Input,
   NavBar,
@@ -15,7 +14,7 @@ import {
 import { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "./../config";
+import { axiosInstance, RespData } from "./../config";
 
 export default () => {
   const navigate = useNavigate();
@@ -28,7 +27,7 @@ export default () => {
   ]);
 
   // 用户上传的头像地址
-  const [avatar, setAvatar] = useState("");
+  const [avatarUrl, setAvatar] = useState("");
 
   /**
    * 上传用户头像
@@ -43,11 +42,11 @@ export default () => {
     const res = await axiosInstance.post("/users/avatar", formdata);
     // 保存头像url
     setAvatar(res.data);
-    const uploadRes = res.data.message;
     // 提示操作结果
     Toast.show({
-      icon: res.data.code ? "fail" : "success",
-      content: uploadRes,
+      icon: res.data ? "success" : "fail",
+      // @ts-ignore
+      content: res.message,
     });
     return {
       url: URL.createObjectURL(file),
@@ -57,22 +56,18 @@ export default () => {
   /**
    * 上传注册信息
    */
-  const signup = async (data: Object) => {
-    const signupInfo = {
-      ...data,
-      avatar,
-    };
-    const respose = await axiosInstance.post("/users/signup", signupInfo);
+  const signup = async (data: any) => {
+    data.avatar = avatarUrl;
+    const respose: RespData = await axiosInstance.post("/users/signup", data);
     // 提示操作结果
     Toast.show({
-      // @ts-ignore
       icon: respose.code ? "success" : "fail",
-      content: `用户注册成功`,
+      content: respose.message,
+      afterClose: () => {
+        navigate("/login");
+      },
     });
     // 注册成功跳转到登录界面
-    setInterval(() => {
-      navigate("/login");
-    }, 1500);
   };
 
   return (
@@ -84,17 +79,6 @@ export default () => {
         align="center"
         style={{ "--gap": "30px", marginTop: "30px" }}
       >
-        <ImageUploader
-          maxCount={1}
-          value={fileList}
-          onChange={setFileList}
-          upload={uploadAvatar}
-        >
-          <Avatar
-            src=""
-            style={{ "--border-radius": "100%", "--size": "70px" }}
-          />
-        </ImageUploader>
         <Form
           layout="horizontal"
           onFinish={(data) => signup(data)}
@@ -129,6 +113,14 @@ export default () => {
             ]}
           >
             <Input placeholder="请输入邮箱" />
+          </Form.Item>
+          <Form.Item name="avatar" label="上传头像">
+            <ImageUploader
+              maxCount={1}
+              value={fileList}
+              onChange={setFileList}
+              upload={uploadAvatar}
+            />
           </Form.Item>
         </Form>
       </Space>

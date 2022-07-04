@@ -13,10 +13,11 @@ import {
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { axiosInstance } from "../config";
+import { axiosInstance, Redirect } from "../config";
 
 export default () => {
-  const { curLoginUser } = JSON.parse(localStorage.UserInfo);
+  Redirect();
+  const curLoginUser = localStorage.curLoginUser;
 
   // 存储投票信息
   const [voteInfo, setVoteInfo] = useImmer({

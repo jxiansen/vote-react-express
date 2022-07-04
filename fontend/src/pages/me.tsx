@@ -1,4 +1,11 @@
-import { NavBar, Collapse, TabBar, Toast } from "antd-mobile";
+import {
+  NavBar,
+  Collapse,
+  TabBar,
+  Toast,
+  Avatar,
+  ActionSheet,
+} from "antd-mobile";
 import {
   EditSOutline,
   FileOutline,
@@ -6,63 +13,64 @@ import {
   DeleteOutline,
   MinusOutline,
 } from "antd-mobile-icons";
-import { axiosInstance } from "../config";
+import {
+  axiosInstance,
+  Redirect,
+  RespData,
+  useCopyToClipboard,
+} from "../config";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImmer } from "use-immer";
+import type { Action } from "antd-mobile/es/components/action-sheet";
 import "./../index.css";
+import { join } from "lodash";
 
 export default () => {
+  const [avatar, setAvatar] = useImmer("");
   const [dataList, updateDataList] = useImmer([]);
   const [curEditIdx, updateCurEditIdx] = useImmer(-1);
+  const [visible, setVisible] = useImmer(false);
   let navigate = useNavigate();
   // 组件最初加载时查看当前用户所创建的所有投票
   useEffect(() => {
-    // 先查看本地是否有用户信息,没有跳转到登录界面
-    if (!localStorage.UserInfo) {
-      Toast.show({
-        icon: "fail",
-        content: "你还没没有登录(⊙o⊙),请先登录。。。",
-      });
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    }
-    if (localStorage.UserInfo) {
-      let { curLoginUser } = JSON.parse(localStorage.UserInfo);
-
-      axiosInstance
-        .get("/vote", {
-          params: {
-            userId: curLoginUser,
-          },
-        })
-        .then((res) => {
-          updateDataList((draft) => {
-            // @ts-ignore
-            draft.push(...res.data);
-          });
+    // 先查看本地是否有用户信息,没有跳转到登录界面,重定向以后本地就可以读取到用户信息
+    Redirect();
+    let [curLoginUser, avatar] = [
+      localStorage.curLoginUser,
+      localStorage.avatar,
+    ];
+    setAvatar(avatar);
+    axiosInstance
+      .get("/vote", {
+        params: {
+          userId: curLoginUser,
+        },
+      })
+      .then((res) => {
+        console.log(res);
+        // localStorage.setItem("allVote",JSON.stringify(res))
+        updateDataList((draft) => {
+          // @ts-ignore
+          draft.push(...res.data);
         });
-    }
+      });
   }, []);
 
   /**
    * 根据voteId来删除对应的投票信息
    */
   const deleteVote = async (voteId: String) => {
-    const result = await axiosInstance.delete(`vote/${voteId}`);
+    const result: RespData = await axiosInstance.delete(`vote/${voteId}`);
 
     // 删除操作反馈信息
     Toast.show({
-      // @ts-ignore
       icon: result.code ? "success" : "fail",
-      // @ts-ignore
       content: result.message,
     });
     updateDataList((draft) => {
       draft.splice(curEditIdx, 1);
     });
-    // document.location.reload();
   };
 
   /**
@@ -79,7 +87,13 @@ export default () => {
       // 传递第二个参数对象, {replace: true} 不然跳转会在当前路径上拼接,而不是替代
     }
     if (key === "/share") {
-      console.log("分享按钮");
+      const url = `${location.host}/vote/${voteId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        Toast.show({
+          icon: "success",
+          content: "分享链接已经复制到粘贴板中\n,快分享你的基友吧👌",
+        });
+      });
     }
     if (key === "/delete") {
       const voteid = dataList[curEditIdx]["_id"];
@@ -89,7 +103,16 @@ export default () => {
 
   return (
     <div className="box">
-      <NavBar className="nav" backArrow={false}>
+      <NavBar
+        className="nav"
+        backArrow={
+          <Avatar
+            src={avatar}
+            style={{ "--size": "35px", "--border-radius": "50%" }}
+            onClick={() => setVisible(true)}
+          />
+        }
+      >
         我的投票
       </NavBar>
       <Collapse accordion>
@@ -108,6 +131,31 @@ export default () => {
           );
         })}
       </Collapse>
+      <ActionSheet
+        extra={`Hello, ${localStorage.username}😘`}
+        cancelText="取消"
+        visible={visible}
+        actions={actions}
+        onClose={() => setVisible(false)}
+        onAction={(action: Action, index: number) => {
+          if (action.key === "signout") {
+            Toast.show({
+              icon: "success",
+              content: "退出账户成功！",
+              afterClose: () => {
+                localStorage.clear();
+                navigate("/login");
+              },
+            });
+          }
+          if (action.key === "copy") {
+            Toast.show({
+              icon: "fail",
+              content: "未完待码",
+            });
+          }
+        }}
+      />
     </div>
   );
 };
@@ -149,3 +197,17 @@ const TabBars = (props: any) => {
     </TabBar>
   );
 };
+
+/**
+ * 头像点击行为
+ */
+const actions: Action[] = [
+  { text: "复制", key: "copy" },
+  { text: "修改", key: "edit", disabled: true },
+  {
+    text: "登出",
+    key: "signout",
+    description: "退出后需重新登录",
+    danger: true,
+  },
+];

@@ -14,37 +14,24 @@ export default () => {
    */
 
   const login = (data: any) => {
-    axiosInstance
-      .post("/users/login", data)
-      .then((data) => {
-        // @ts-ignore
-        const { code, message, token, userId } = data;
-        if (code) {
-          localStorage.UserInfo = JSON.stringify({
-            curLoginUser: userId,
-            token: token,
-          });
-          // 提示操作结果
-          Toast.show({
-            icon: "success",
-            content: message,
-          });
-          setInterval(() => {
-            navigate("/home/me");
-          }, 1500);
-        } else {
-          Toast.show({
-            icon: "fail",
-            content: message,
-          });
-        }
-      })
-      .catch((err) => {
-        Toast.show({
-          icon: "fail",
-          content: "登录失败",
-        });
+    axiosInstance.post("/users/login", data).then((res) => {
+      // @ts-ignore
+      const { code, message, data } = res;
+      Toast.show({
+        icon: code ? "success" : "fail",
+        content: message,
+        afterClose: () => {
+          navigate("/home/me");
+        },
       });
+      const { userId, token, avatar, username } = data;
+      if (code) {
+        localStorage.curLoginUser = userId;
+        localStorage.username = username;
+        localStorage.token = token;
+        localStorage.avatar = avatar;
+      }
+    });
   };
 
   return (
@@ -63,7 +50,7 @@ export default () => {
         style={{ "--gap": "30px", marginTop: "30px" }}
       >
         <Avatar
-          src=""
+          src={"avatar"}
           style={{ "--border-radius": "100%", "--size": "60px" }}
         />
 
