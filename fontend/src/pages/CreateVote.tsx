@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useImmer } from "use-immer";
 import {
   Form,
@@ -13,60 +13,27 @@ import {
 } from "antd-mobile";
 import { MinusCircleOutline, AddCircleOutline } from "antd-mobile-icons";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { axiosInstance, Redirect } from "../config";
+import client from "../client";
+import { cloneDeep } from "lodash";
 
 export default () => {
-  Redirect();
-  const curLoginUser = localStorage.curLoginUser;
-
   // 存储投票信息
   const [voteInfo, setVoteInfo] = useImmer({
-    createrId: curLoginUser,
     title: "",
     desc: "",
-    deadLine: "",
     options: [],
+    deadLine: "",
+    allCounter: 0,
+    anyoumous: false,
+    limit: false,
     voteType: false,
   });
-  const [navbarStr, updateNavbarStr] = useImmer("");
   // 返回一个函数,这个函数中传递一个路径可以跳转到指定路径
   var navigate = useNavigate();
   // 根据路由地址判断是单选投票还是多选投票,如果路径有问题,跳转到单选投票路由
   let [searchParams, setSearchParams] = useSearchParams();
   // 获取投票参数
-  const { id } = useParams();
-
-  useEffect(() => {
-    setNavBar();
-    // 如果是进入投票编辑界面
-    if (id) {
-      axiosInstance
-        .get(`vote/${id}`)
-        .then((res) => res.data)
-        .then((data) => {
-          data.options = data.options.map(
-            (obj: { content: any }) => obj.content
-          );
-          setVoteInfo(data);
-        });
-      return;
-    }
-  }, []);
-
-  /**
-   * 根据路location的不同设置不同的navbar
-   */
-  const setNavBar = () => {
-    if (id) {
-      updateNavbarStr("修改投票信息");
-    }
-    if (searchParams.get("type") === "single") {
-      updateNavbarStr("创建单选投票");
-    }
-    if (searchParams.get("type") === "multiple") {
-      updateNavbarStr("创建多选投票");
-    }
-  };
+  let { id } = useParams();
 
   // 设置默认事件选择器是否显示
   const [visible, setVisible] = useState(false);
@@ -76,46 +43,35 @@ export default () => {
   /**
    * 表单提交
    */
-
   const submitInfo = async () => {
-    const cloneVoteInfo = deepClone(voteInfo);
-    cloneVoteInfo.options = cloneVoteInfo.options.map((item: any) => ({
-      content: item,
+    // 将对象深拷贝一下
+    let clone = cloneDeep(voteInfo);
+    // @ts-ignore
+    clone.options = voteInfo.options.map((i) => ({
+      content: i,
+      supporterId: [],
+      avatar: [],
+      count: 0,
     }));
-    const res = await axiosInstance.post("/vote", cloneVoteInfo);
-    // 返回的res数据中包含创建好的voteid,根据此id跳转到对应的查看路由
-    // @ts-ignore
-    const { voteId, message, code } = res;
-    // 当提交后显示后台操作结果反馈
-    Toast.show({
-      icon: code ? "success" : "fail",
-      content: message,
-    });
-    if (code) {
-      setTimeout(() => {
-        navigate(`/vote/${voteId}`);
-      }, 2000);
-    }
-  };
-
-  /**
-   * 更新投票信息
-   */
-
-  const updateVoteInfo = async () => {
-    const res = await axiosInstance.put(`/vote/${id}`, voteInfo);
-    Toast.show({
-      // @ts-ignore
-      icon: res.code ? "success" : "fail",
-      // @ts-ignore
-      content: res.message,
-      // @ts-ignore
-    });
-    // @ts-ignore
-    if (res.code) {
-      setTimeout(() => {
-        navigate(`/vote/${id}`);
-      }, 2000);
+    try {
+      // 提交表单信息并获取返回
+      const record = await client.records.create("vote", clone);
+      console.log(record);
+      // // 当提交后显示后台操作结果反馈
+      Toast.show({
+        icon: "success",
+        content: "创建投票信息成功",
+        duration: 1500,
+        afterClose: () => {
+          navigate(`/vote/${record.id}`);
+        },
+      });
+    } catch (err) {
+      console.log(err);
+      Toast.show({
+        icon: "fail",
+        content: "创建投票信息失败",
+      });
     }
   };
 
@@ -145,12 +101,14 @@ export default () => {
           navigate("/home/me");
         }}
       >
-        {navbarStr}
+        {searchParams.get("type") === "single"
+          ? "创建单选投票"
+          : "创建多选投票"}
       </NavBar>
 
       <Form
         layout="horizontal"
-        onFinish={() => (id ? updateVoteInfo() : submitInfo())}
+        onFinish={submitInfo}
         footer={
           <Button block type="submit" color="primary" size="large">
             完成
@@ -195,7 +153,8 @@ export default () => {
                 />
                 <Input
                   placeholder="选项"
-                  value={option}
+                  // @ts-ignore
+                  value={option.content}
                   onChange={(e) => editOptions(e, idx)}
                 />
               </Space>
@@ -249,23 +208,4 @@ export default () => {
       </Form>
     </>
   );
-};
-
-/**
- * 深拷贝函数
- */
-
-const deepClone = (obj: any) => {
-  if (obj === null) return null;
-  let clone = Object.assign({}, obj);
-  Object.keys(clone).forEach(
-    (key) =>
-      (clone[key] =
-        typeof obj[key] === "object" ? deepClone(obj[key]) : obj[key])
-  );
-  if (Array.isArray(obj)) {
-    clone.length = obj.length;
-    return Array.from(clone);
-  }
-  return clone;
 };

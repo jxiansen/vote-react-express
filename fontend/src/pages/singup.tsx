@@ -1,7 +1,7 @@
 /**
  * 用户登录组件
  */
-
+import PocketBase from "pocketbase";
 import {
   Button,
   Space,
@@ -14,60 +14,37 @@ import {
 import { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance, RespData } from "./../config";
-
+import client from "../client";
 export default () => {
   const navigate = useNavigate();
-
-  // 图像列表
-  const [fileList, setFileList] = useState<ImageUploadItem[]>([
-    {
-      url: " ",
-    },
-  ]);
-
-  // 用户上传的头像地址
-  const [avatarUrl, setAvatar] = useState("");
-
-  /**
-   * 上传用户头像
-   */
-
-  async function uploadAvatar(file: File) {
-    // file是图片的Blob格式文件
-    const formdata = new FormData();
-    // 转换成formdata数据上传后端
-    formdata.append("avatar", file, file.name);
-    // 上传后端接口
-    const res = await axiosInstance.post("/users/avatar", formdata);
-    // 保存头像url
-    setAvatar(res.data);
-    // 提示操作结果
-    Toast.show({
-      icon: res.data ? "success" : "fail",
-      // @ts-ignore
-      content: res.message,
-    });
-    return {
-      url: URL.createObjectURL(file),
-    };
-  }
 
   /**
    * 上传注册信息
    */
   const signup = async (data: any) => {
-    data.avatar = avatarUrl;
-    const respose: RespData = await axiosInstance.post("/users/signup", data);
-    // 提示操作结果
     Toast.show({
-      icon: respose.code ? "success" : "fail",
-      content: respose.message,
-      afterClose: () => {
-        navigate("/login");
-      },
+      icon: "loading",
+      content: "提交注册信息",
     });
-    // 注册成功跳转到登录界面
+    try {
+      // 注册成功跳转到登录界面
+      console.log(data);
+      client.users.create(data);
+      Toast.show({
+        icon: "success",
+        content: "注册成功",
+        afterClose: () => {
+          navigate("/login");
+        },
+      });
+    } catch (err) {
+      console.log(err);
+      // 提示操作结果
+      Toast.show({
+        icon: "fail",
+        content: "注册失败,请检查输入信息",
+      });
+    }
   };
 
   return (
@@ -81,28 +58,13 @@ export default () => {
       >
         <Form
           layout="horizontal"
-          onFinish={(data) => signup(data)}
+          onFinish={signup}
           footer={
             <Button block type="submit" color="primary" size="large">
               注册用户
             </Button>
           }
         >
-          <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: "用户名不能为空" }]}
-          >
-            <Input placeholder="请输入用户名" />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            label="密码"
-            rules={[{ required: true, message: "密码不能为空" }]}
-          >
-            <Input placeholder="请输入密码" />
-          </Form.Item>
           <Form.Item
             name="email"
             label="邮箱"
@@ -114,14 +76,28 @@ export default () => {
           >
             <Input placeholder="请输入邮箱" />
           </Form.Item>
-          <Form.Item name="avatar" label="上传头像">
+          <Form.Item
+            name="password"
+            label="密码"
+            rules={[{ required: true, message: "密码不能为空" }]}
+          >
+            <Input placeholder="请输入密码" />
+          </Form.Item>
+          <Form.Item
+            name="passwordConfirm"
+            label="确认密码"
+            rules={[{ required: true, message: "密码不能为空" }]}
+          >
+            <Input placeholder="两次密码需要一致" />
+          </Form.Item>
+          {/* <Form.Item name="avatar" label="上传头像">
             <ImageUploader
               maxCount={1}
               value={fileList}
               onChange={setFileList}
               upload={uploadAvatar}
             />
-          </Form.Item>
+          </Form.Item> */}
         </Form>
       </Space>
     </>

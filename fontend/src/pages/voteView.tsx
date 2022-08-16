@@ -1,7 +1,7 @@
 /**
  * 投票内容详情页面
  */
-
+// @ts-nocheck
 import {
   NavBar,
   List,
@@ -11,41 +11,21 @@ import {
   Avatar,
   Space,
   ProgressCircle,
+  DotLoading,
 } from "antd-mobile";
 import { useParams, useNavigate } from "react-router-dom";
 import { CheckOutline } from "antd-mobile-icons";
-import { useState, useEffect, useRef } from "react";
-import { axiosInstance, Redirect } from "../config";
+import { useState, useEffect } from "react";
+import client from "../client";
 import { useImmer } from "use-immer";
+import { useRequest } from "ahooks";
 
 export default () => {
   const navigate = useNavigate();
   // 先查看本地是否有用户信息,没有跳转到登录界面,重定向以后本地就可以读取到用户信息
-  Redirect();
-  const curLoginUser = localStorage.curLoginUser;
-  const [voteInfo, setVoteInfo] = useImmer({
-    title: "",
-    desc: "",
-    deadLine: "",
-    voteType: true,
-    options: [
-      {
-        content: "",
-        count: 0,
-        supporterId: [],
-      },
-      {
-        content: "",
-        count: 0,
-        supporterId: [],
-      },
-    ],
-    allCounter: 0,
-  });
 
-  const checkIdx = useRef(-1);
   // 按钮是否禁用,默认是没有投票过的
-  const [disabled, setDisabled] = useImmer(true);
+  const [disabled, setDisabled] = useImmer(false);
   // 是否投票过,默认没有投票过
   const [hasVoted, setHasVoted] = useState(false);
   // 当前投票选中状态
@@ -55,54 +35,36 @@ export default () => {
   // 组件刚加载出来, 获取当前voteId, 根据voteId来查找相关信息;
   // 获取voteId;
   const { id } = useParams();
-  // 引入状态文件
 
   /**
    * 组件开始先获取当前投票信息
    */
 
-  useEffect(() => {
-    axiosInstance.get("vote/" + id).then((data) => {
-      handleVoteData(data);
-    });
-  }, []);
-
-  const handleVoteData = (obj: any) => {
-    const { hasVoted } = obj;
-    // 当前用户已经投票过的情况
-    if (hasVoted) {
-      setHasVoted(true);
-      setVoteInfo(obj.data);
-
-      // 1. 先找出用户投票的选项
-      const voteIdx = obj.data.options
-        .map((i: any) => i.supporterId)
-        .findIndex((i: any) => i.includes(curLoginUser));
-      // 2. 设置默认显示投票选项
-      checkIdx.current = voteIdx;
-      setCheckedIdx(voteIdx);
-      return;
-    }
-    // 没有投票过的情况
-    setVoteInfo(obj.data);
-  };
-
-  /**
-   * 组件每次重新渲染时监控投票选项
-   */
+  const { data, error, loading, mutate } = useRequest(() =>
+    // @ts-ignore
+    client.records.getOne("vote", id)
+  );
 
   useEffect(() => {
-    if (checkedIdx !== -1) {
-      setDisabled(false);
+    // 当请求到数据时的操作
+    if (data) {
+      // 1. 判断当前用户是否已经投票过
+      let allVotedUser = data.options.map((i) => i.supporterId).flat();
+      const { model } = JSON.parse(localStorage.pocketbase_auth);
+      const { id } = model;
+      // 2. 对于投票过的，找出投票第几项,并设置
+      if (allVotedUser.includes(id)) {
+        console.log("已经投票过");
+        setHasVoted(true);
+        const idx = data.options.findIndex((item) =>
+          item.supporterId.includes(id)
+        );
+        setCheckedIdx(idx);
+      }
+      console.log(data);
+      console.log(allVotedUser);
     }
-    if (hasVoted && checkedIdx !== checkIdx.current) {
-      Toast.show({
-        icon: "fail",
-        content: "您已经投票过",
-      });
-      setCheckedIdx(checkIdx.current);
-    }
-  }, [checkedIdx]);
+  }, [data]);
 
   /**
    * 处理投票提交选项
@@ -119,21 +81,33 @@ export default () => {
       });
       return;
     }
-    Redirect();
-    const curLoginUser = localStorage.curLoginUser;
-    const res = await axiosInstance.post(`vote/${id}`, {
-      checkedIdx,
-      curLoginUser,
-    });
-    // @ts-ignore
-    if (res.code) {
+    try {
+      // 从 localStorage 中读取 userId
+      const { model } = JSON.parse(localStorage.pocketbase_auth);
+      const { id } = model;
+      mutate((data: any) => {
+        data.options[checkedIdx].supporterId.push(id);
+        data.options[checkedIdx].count =
+          data.options[checkedIdx].supporterId.length;
+        data.allCounter++;
+        return data;
+      });
+      const record = await client.records.update("vote", data.id, data);
+      console.log(record);
       Toast.show({
         icon: "success",
         content: "投票成功！",
+        duration: 1000,
+        afterClose() {
+          window.location.reload();
+        },
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+    } catch (err) {
+      console.log(err);
+      Toast.show({
+        icon: "fail",
+        content: "投票失败",
+      });
     }
   };
 
@@ -150,62 +124,76 @@ export default () => {
   return (
     <>
       <NavBar onBack={() => navigate("/home/me")}>投票详情</NavBar>
-      <Card>{<h2>{voteInfo.title}</h2>}</Card>
-      <Card>
-        {voteInfo.desc}
-        {voteInfo.voteType ? "[单选]" : "[多选]"}
-      </Card>
-
-      <List>
-        {voteInfo.options.map((option: any, idx: number) => (
-          <List.Item
-            key={idx}
-            extra={
-              <Space align="center">
-                <span>{option.count}票 &nbsp;&nbsp;&nbsp;</span>
-                <span>
-                  <ProgressCircle
-                    style={{ "--size": "35px", fontSize: "12px" }}
-                    percent={toPercent(option.count, voteInfo.allCounter)}
-                  >
-                    {toPercent(option.count, voteInfo.allCounter).toString() +
-                      "%"}
-                  </ProgressCircle>
-                </span>
-              </Space>
-            }
-            arrow={false}
-            onClick={() => {
-              setCheckedIdx(idx);
-            }}
-          >
-            <Space direction="vertical">
-              <div>
-                <span style={{ fontSize: "18px" }}>{option.content}</span>
-                <span>
-                  {checkedIdx === idx && (
-                    <CheckOutline color="var(--adm-color-primary)" />
-                  )}
-                </span>
-              </div>
-              {isShowAvatar && <AvatarList urlList={option.avatar} />}
-            </Space>
-          </List.Item>
-        ))}
-      </List>
-      <Card bodyStyle={{ color: "GrayText" }}>
-        投票截至: {voteInfo.deadLine}
-      </Card>
-
-      <Button
-        block
-        color="primary"
-        size="middle"
-        disabled={disabled}
-        onClick={handleSubmit}
-      >
-        {hasVoted ? "显示详情" : "投票"}
-      </Button>
+      {(() => {
+        if (loading)
+          return (
+            <div style={{ fontSize: 25, textAlign: "center" }}>
+              <DotLoading color="primary" />
+            </div>
+          );
+        if (error) {
+          return <h1>获取数据失败</h1>;
+        }
+        return (
+          <>
+            {" "}
+            <Card>{<h2>{data.title}</h2>}</Card>
+            <Card>
+              {data.desc}
+              {data.voteType ? "[单选]" : "[多选]"}
+            </Card>
+            <List>
+              {data.options.map((option: any, idx: number) => (
+                <List.Item
+                  key={idx}
+                  extra={
+                    <Space align="center">
+                      <span>{option.count}票 &nbsp;&nbsp;&nbsp;</span>
+                      <span>
+                        <ProgressCircle
+                          style={{ "--size": "35px", fontSize: "12px" }}
+                          percent={toPercent(option.count, data.allCounter)}
+                        >
+                          {toPercent(option.count, data.allCounter).toString() +
+                            "%"}
+                        </ProgressCircle>
+                      </span>
+                    </Space>
+                  }
+                  arrow={false}
+                  onClick={() => {
+                    setCheckedIdx(idx);
+                  }}
+                >
+                  <Space direction="vertical">
+                    <div>
+                      <span style={{ fontSize: "18px" }}>{option.content}</span>
+                      <span>
+                        {checkedIdx === idx && (
+                          <CheckOutline color="var(--adm-color-primary)" />
+                        )}
+                      </span>
+                    </div>
+                    {isShowAvatar && <AvatarList urlList={option.avatar} />}
+                  </Space>
+                </List.Item>
+              ))}
+            </List>
+            <Card bodyStyle={{ color: "GrayText" }}>
+              投票截至: {data.deadLine}
+            </Card>
+            <Button
+              block
+              color="primary"
+              size="middle"
+              disabled={disabled}
+              onClick={handleSubmit}
+            >
+              {hasVoted ? "查看投票详情" : "投票"}
+            </Button>
+          </>
+        );
+      })()}
     </>
   );
 };

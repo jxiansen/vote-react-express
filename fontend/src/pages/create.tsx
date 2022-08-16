@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { NavBar, Button, Toast } from "antd-mobile";
+import { NavBar, Button } from "antd-mobile";
 import { FileOutline, UnorderedListOutline } from "antd-mobile-icons";
 import "./../index.css";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +36,7 @@ export default () => {
           多选投票
         </Button>
       </div>
-      <span className="textCenter">🐱‍👤山寨云提供计算服务</span>
+      {/* <span className="textCenter">🐱‍👤山寨云提供计算服务</span> */}
     </div>
   );
 };
