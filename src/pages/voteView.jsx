@@ -15,13 +15,13 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import { CheckOutline } from "antd-mobile-icons";
 import { useState, useEffect, useRef } from "react";
-import { axiosInstance, Redirect } from "../config";
+import { axiosInstance } from "../config";
 import { useImmer } from "use-immer";
 
 export default () => {
   const navigate = useNavigate();
   // 先查看本地是否有用户信息,没有跳转到登录界面,重定向以后本地就可以读取到用户信息
-  Redirect();
+
   const curLoginUser = localStorage.curLoginUser;
   const [voteInfo, setVoteInfo] = useImmer({
     title: "",
@@ -67,7 +67,7 @@ export default () => {
     });
   }, []);
 
-  const handleVoteData = (obj: any) => {
+  const handleVoteData = (obj) => {
     const { hasVoted } = obj;
     // 当前用户已经投票过的情况
     if (hasVoted) {
@@ -76,8 +76,8 @@ export default () => {
 
       // 1. 先找出用户投票的选项
       const voteIdx = obj.data.options
-        .map((i: any) => i.supporterId)
-        .findIndex((i: any) => i.includes(curLoginUser));
+        .map((i) => i.supporterId)
+        .findIndex((i) => i.includes(curLoginUser));
       // 2. 设置默认显示投票选项
       checkIdx.current = voteIdx;
       setCheckedIdx(voteIdx);
@@ -119,7 +119,7 @@ export default () => {
       });
       return;
     }
-    Redirect();
+
     const curLoginUser = localStorage.curLoginUser;
     const res = await axiosInstance.post(`vote/${id}`, {
       checkedIdx,
@@ -140,12 +140,12 @@ export default () => {
   /**
    * 小数转百分数,传入分子和分母
    */
-  const toPercent = (point: number, numerator: number): number => {
-    if (numerator === 0) {
-      return 0;
-    }
-    return Math.floor((point / numerator) * 100);
-  };
+  // const toPercent = (point, numerator) => {
+  //   if (numerator === 0) {
+  //     return 0;
+  //   }
+  //   return Math.floor((point / numerator) * 100);
+  // };
 
   return (
     <>
@@ -157,20 +157,20 @@ export default () => {
       </Card>
 
       <List>
-        {voteInfo.options.map((option: any, idx: number) => (
+        {voteInfo.options.map((option, idx) => (
           <List.Item
             key={idx}
             extra={
               <Space align="center">
                 <span>{option.count}票 &nbsp;&nbsp;&nbsp;</span>
                 <span>
-                  <ProgressCircle
+                  {/* <ProgressCircle
                     style={{ "--size": "35px", fontSize: "12px" }}
                     percent={toPercent(option.count, voteInfo.allCounter)}
                   >
                     {toPercent(option.count, voteInfo.allCounter).toString() +
                       "%"}
-                  </ProgressCircle>
+                  </ProgressCircle> */}
                 </span>
               </Space>
             }
@@ -188,7 +188,7 @@ export default () => {
                   )}
                 </span>
               </div>
-              {isShowAvatar && <AvatarList urlList={option.avatar} />}
+              {/* {isShowAvatar && <AvatarList urlList={option.avatar} />} */}
             </Space>
           </List.Item>
         ))}
@@ -214,16 +214,16 @@ export default () => {
  * 自定义头像列表组件,传入一个url数组
  */
 
-const AvatarList = (props: { urlList: any[] }) => {
-  return (
-    <Space align={"center"}>
-      {props.urlList.map((url, idx) => (
-        <Avatar
-          src={url}
-          key={`${idx}`}
-          style={{ "--size": "30px", "--border-radius": "50%" }}
-        />
-      ))}
-    </Space>
-  );
-};
+// const AvatarList = (props: { urlList  }) => {
+//   return (
+//     <Space align={"center"}>
+//       {props.urlList.map((url, idx) => (
+//         <Avatar
+//           src={url}
+//           key={`${idx}`}
+//           style={{ "--size": "30px", "--border-radius": "50%" }}
+//         />
+//       ))}
+//     </Space>
+//   );
+// };

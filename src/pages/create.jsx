@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { NavBar, Button, Toast } from "antd-mobile";
 import { FileOutline, UnorderedListOutline } from "antd-mobile-icons";
-import "./../index.css";
+
 import { useNavigate } from "react-router-dom";
 
 export default () => {

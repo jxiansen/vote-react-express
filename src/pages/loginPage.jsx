@@ -1,38 +1,38 @@
-/**
- * 用户登录组件
- */
-
 import { Button, Space, Avatar, Form, Input, NavBar, Toast } from "antd-mobile";
-import { axiosInstance } from "../config";
-import { useNavigate } from "react-router-dom";
-import "./../index.css";
 
-export default () => {
+import { useNavigate } from "react-router-dom";
+
+import { authWithPassword } from "../services/user";
+
+import { useState } from "react";
+
+function LoginPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   /**
    * 根据用户名和密码提交信息登录
    */
 
-  const login = (data: any) => {
-    axiosInstance.post("/users/login", data).then((res) => {
-      // @ts-ignore
-      const { code, message, data } = res;
-      Toast.show({
-        icon: code ? "success" : "fail",
-        content: message,
-        afterClose: () => {
-          navigate("/home/me");
-        },
+  function login(data) {
+    if (loading) {
+      return;
+    }
+    setLoading(true);
+
+    authWithPassword(data)
+      .then((res) => {
+        navigate("/home/me");
+      })
+      .catch((err) => {
+        Toast.show({
+          icon: "fail",
+          content: "登录失败",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      const { userId, token, avatar, username } = data;
-      if (code) {
-        localStorage.curLoginUser = userId;
-        localStorage.username = username;
-        localStorage.token = token;
-        localStorage.avatar = avatar;
-      }
-    });
-  };
+  }
 
   return (
     <>
@@ -56,7 +56,7 @@ export default () => {
 
         <Form
           layout="horizontal"
-          onFinish={(data) => login(data)}
+          onFinish={login}
           footer={
             <Button block type="submit" color="primary" size="large">
               登录
@@ -89,4 +89,6 @@ export default () => {
       </p>
     </>
   );
-};
+}
+
+export default LoginPage;

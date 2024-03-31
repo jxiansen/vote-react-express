@@ -61,31 +61,17 @@ export const Redirect = () => {
   if (!localStorage.token) {
     Toast.show({
       icon: "fail",
-      content: "你还没没有登录(⊙o⊙),请先登录。。。",
-      afterClose: () => {
-        navigate("/login");
-      },
+      content: "您还没有登录,请先登录",
     });
   }
 };
 
-// 定义axios响应对象接口
-export interface RespData {
-  code: number;
-  message: string;
-  data?: object;
-  err?: object;
-}
-
 // 自定义复制粘贴板hook
 
-type CopiedValue = string | null;
-type CopyFn = (text: string) => Promise<boolean>; // Return success
+export function useCopyToClipboard() {
+  const [copiedText, setCopiedText] = useState(null);
 
-export function useCopyToClipboard(): [CopiedValue, CopyFn] {
-  const [copiedText, setCopiedText] = useState<CopiedValue>(null);
-
-  const copy: CopyFn = async (text) => {
+  const copy = async (text) => {
     if (!navigator?.clipboard) {
       console.warn("Clipboard not supported");
       return false;

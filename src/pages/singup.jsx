@@ -1,7 +1,3 @@
-/**
- * 用户登录组件
- */
-
 import {
   Button,
   Space,
@@ -11,16 +7,15 @@ import {
   ImageUploader,
   Toast,
 } from "antd-mobile";
-import { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance, RespData } from "./../config";
 
 export default () => {
   const navigate = useNavigate();
 
   // 图像列表
-  const [fileList, setFileList] = useState<ImageUploadItem[]>([
+  const [fileList, setFileList] = useState([
     {
       url: " ",
     },
@@ -33,42 +28,42 @@ export default () => {
    * 上传用户头像
    */
 
-  async function uploadAvatar(file: File) {
-    // file是图片的Blob格式文件
-    const formdata = new FormData();
-    // 转换成formdata数据上传后端
-    formdata.append("avatar", file, file.name);
-    // 上传后端接口
-    const res = await axiosInstance.post("/users/avatar", formdata);
-    // 保存头像url
-    setAvatar(res.data);
-    // 提示操作结果
-    Toast.show({
-      icon: res.data ? "success" : "fail",
-      // @ts-ignore
-      content: res.message,
-    });
-    return {
-      url: URL.createObjectURL(file),
-    };
-  }
+  // async function uploadAvatar(file) {
+  //   // file是图片的Blob格式文件
+  //   const formdata = new FormData();
+  //   // 转换成formdata数据上传后端
+  //   formdata.append("avatar", file, file.name);
+  //   // 上传后端接口
+  //   const res = await axiosInstance.post("/users/avatar", formdata);
+  //   // 保存头像url
+  //   setAvatar(res.data);
+  //   // 提示操作结果
+  //   Toast.show({
+  //     icon: res.data ? "success" : "fail",
+  //     // @ts-ignore
+  //     content: res.message,
+  //   });
+  //   return {
+  //     url: URL.createObjectURL(file),
+  //   };
+  // }
 
   /**
    * 上传注册信息
    */
-  const signup = async (data: any) => {
-    data.avatar = avatarUrl;
-    const respose: RespData = await axiosInstance.post("/users/signup", data);
-    // 提示操作结果
-    Toast.show({
-      icon: respose.code ? "success" : "fail",
-      content: respose.message,
-      afterClose: () => {
-        navigate("/login");
-      },
-    });
-    // 注册成功跳转到登录界面
-  };
+  // const signup = async (data) => {
+  //   data.avatar = avatarUrl;
+  //   const respose = await axiosInstance.post("/users/signup", data);
+  //   // 提示操作结果
+  //   Toast.show({
+  //     icon: respose.code ? "success" : "fail",
+  //     content: respose.message,
+  //     afterClose: () => {
+  //       navigate("/login");
+  //     },
+  //   });
+  //   // 注册成功跳转到登录界面
+  // };
 
   return (
     <>
@@ -81,7 +76,7 @@ export default () => {
       >
         <Form
           layout="horizontal"
-          onFinish={(data) => signup(data)}
+          // onFinish={(data) => signup(data)}
           footer={
             <Button block type="submit" color="primary" size="large">
               注册用户
